@@ -21,6 +21,11 @@ class MissingVariable(Error):
     pass
 
 
+class MissingKey(Error):
+    """ Raised when a parameter/value is missing """
+    pass
+
+
 class MissingAttribute(Error):
     """ Raised when an attribute is not found """
     pass

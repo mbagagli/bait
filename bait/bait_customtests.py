@@ -1,3 +1,15 @@
+"""
+DEVELOPER HINT:
+ - Every main method should receive a trace.copy() instance
+ - If you want to use SLICE instead of TRIM, make sure that your
+   pointer reference changes as well! (i.e. reassign a new name to the slice)
+        ES: >>> Signal = wt.slice( ...)
+                    NOT
+            >>>  wt.slice(...)
+
+
+"""
+
 import os
 import sys
 import numpy as np
@@ -17,7 +29,8 @@ def _normalizeTrace(workList, rangeVal=[-1, 1]):
 
     """
     minVal, maxVal = min(workList), max(workList)
-    workList[:] = [((x - minVal) / (maxVal - minVal)) * (rangeVal[1] - rangeVal[0]) for x in workList]
+    workList[:] = [((x - minVal) / (maxVal - minVal)) *
+                   (rangeVal[1] - rangeVal[0]) for x in workList]
     workList = workList + rangeVal[0]
     return workList
 
@@ -52,18 +65,18 @@ def SignalAmp(wt, bpd, timewin, thr_par_1):
 
     """
     tfn = sys._getframe().f_code.co_name
-    PostPick_GMT = bpd['pickUTC']+timewin
     wt.data = _createCF(wt.data)
-    wt.slice(bpd['pickUTC'], PostPick_GMT)
+    Signal = wt.slice(bpd['pickUTC'], bpd['pickUTC'] + timewin)
+
     # ------ Out + Log
-    if wt.data.max() <= thr_par_1:
+    if Signal.data.max() <= thr_par_1:
         logger.debug((' '*4+'FALSE  %s: %5.3f > %5.3f'+os.linesep) % (
-                                            tfn, wt.data.max(), thr_par_1))
-        return (False, wt.data.max())
+                                            tfn, Signal.data.max(), thr_par_1))
+        return (False, Signal.data.max())
     else:
         logger.debug((' '*4+'TRUE   %s: %5.3f > %5.3f'+os.linesep) % (
-                                            tfn, wt.data.max(), thr_par_1))
-        return (True, wt.data.max())
+                                            tfn, Signal.data.max(), thr_par_1))
+        return (True, Signal.data.max())
 
 
 def SignalSustain(wt, bpd, timewin, timenum, snratio):
@@ -93,19 +106,20 @@ def SignalSustain(wt, bpd, timewin, timenum, snratio):
         Signal = wt.slice(bpd['pickUTC'] + (num*timewin),
                           bpd['pickUTC'] + ((num+1)*timewin))
         WINDOWING.append(Signal.data)
+
     # ------ Out + Log
     if True in (window.mean() <= snratio * Noise.data.mean()
                 for window in WINDOWING):
-        # signaal2noise ratio is lower then user-threshold
+        # signal2noise ratio is lower then user-threshold
         logger.debug((' '*4+'FALSE  %s: [SNratio] %5.3f >' +
-                      ' [SigMean(w)/NoiseMean(w)] %5.3f') %
+                      ' [SigMean(w)/NoiseMean(w)] %s') %
                      (tfn, snratio, [float(_xx.mean() / Noise.data.mean())
                       for _xx in WINDOWING]))
         return (False, [float(_xx.mean() / Noise.data.mean())
                 for _xx in WINDOWING])
     else:
         logger.debug((' '*4+'TRUE   %s: [SNratio] %5.3f <' +
-                      ' [SigMean(w)/NoiseMean(w)] %5.3f') %
+                      ' [SigMean(w)/NoiseMean(w)] %s') %
                      (tfn, snratio, [float(_xx.mean() / Noise.data.mean())
                       for _xx in WINDOWING]))
         return (True, [float(_xx.mean() / Noise.data.mean())
