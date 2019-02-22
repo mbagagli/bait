@@ -15,6 +15,7 @@ from operator import itemgetter
 import numpy as np
 # lib for Errors
 from obspy.core.trace import Trace
+from obspy.core.stream import Stream
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class BaIt(object):
     """
     def __init__(self,
                  stream,
+                 stream_raw=None,
                  channel="*Z",
                  max_iter=5,
                  opbk_main={},
@@ -43,12 +45,13 @@ class BaIt(object):
                  pickAIC=None,
                  pickAIC_conf={}):
         self.st = stream
+        self.straw = stream_raw
         self.wc = channel
         self.maxit = max_iter
         self.opbk_main = opbk_main
         self.opbk_aux = opbk_aux
-        self.wt = None                # workingtrace
-        self._setworktrace(self.wc)
+        self.wt = None                          # workingtrace
+        self._setworktrace(channel, "PROC")
         #
         self.pick_test = test_pickvalidation
         self.post_test = test_postvalidation
@@ -98,7 +101,7 @@ class BaIt(object):
             for _kk in self.post_test.keys():
                 self.baitdict_post["evaluatePickPost_tests"][_kk] = None
 
-    def _storepick(self, stkey, **kwargs): # iteration=None, pickUTC=None, pickInfo=None):
+    def _storepick(self, stkey, **kwargs):
         """
         This is the method that is called FIRST by bait algorithm.
         Is called by `picker` method.
@@ -115,12 +118,23 @@ class BaIt(object):
                 raise BE.MissingKey()
             self.baitdict[str(stkey)][_kk] = _vv
 
-    def _setworktrace(self, channel, **kwargs):
+    def _setworktrace(self, channel, procraw):
         """
         Private method to change pointer of working trace for picker.
         Use obspy.Stream.select function
         """
-        self.wt = self.st.select(channel=channel, **kwargs)[0]
+        if procraw.lower() not in ('raw', 'proc'):
+            self.wt = None
+            self.wc = None
+            raise BE.BadKeyValue({'message': ("wrong tag selection --> %s" %
+                                              procraw)})
+        #
+        if procraw.lower() == "raw" and isinstance(self.straw, Stream):
+            selstream = self.straw
+        else:
+            selstream = self.st
+        #
+        self.wt = selstream.select(channel=channel)[0]
         self.wc = channel
 
     def _getbaitdict(self):
@@ -163,7 +177,7 @@ class BaIt(object):
                     VALIDPICKS = True
                     # If pick is valid and user wants AIC --> call AIC picker
                     if self.pickAIC:
-                        aicpick, aicfun, _ = self.AIC(
+                        aicpick, aicfun, aicidx = self.AIC(
                           aroundpick=self.baitdict[str(ITERATION)]['pickUTC'],
                           **self.pickAIC_conf)
                         self._storepick(ITERATION,
@@ -190,6 +204,8 @@ class BaIt(object):
         RETURN UTCDateTime pick and Pick INFO from OBsPy BK
 
         """
+        # --- Select trace 22022019 --> v2.1.6
+        self._setworktrace(self.wt, "PROC")  # baer picker needs always proc
         if not isinstance(self.wt, Trace):
             raise BE.BadInstance()
         # -------------------------------------------------------- Cut Trace
@@ -208,25 +224,29 @@ class BaIt(object):
         tdownmax_NEW = self._sec2sample(tdownmax, df)            # Half of tupevent
         p_dur_NEW = self._sec2sample(p_dur, df)                  # time-interval in which MAX AMP is evaluated
         # ----------------------------------------------------------- Picker
-        PickSample, PhaseInfo = pk_baer(tr.data, df, tdownmax_NEW,
-                                        tupevent_NEW, thr1, thr2,
-                                        preset_len_NEW, p_dur_NEW)
+        PickSample, PhaseInfo, _CF = pk_baer(tr.data, df, tdownmax_NEW,
+                                             tupevent_NEW, thr1, thr2,
+                                             preset_len_NEW, p_dur_NEW)
         PickTime = PickSample/df    # convert pick from samples
                                     # to seconds (Absolute from first sample)
         PhaseInfo = str(PhaseInfo).strip()
         # ------------------------------------------------------------- Save
         if PhaseInfo != '':  # Valid Pick
-            self._storepick(it,      # first is keydict, second is it info
+            self._storepick(it,           # first is keydict, second is it info
                             iteration=it,
                             pickUTC=tr.stats.starttime+PickTime,
                             bk_info=PhaseInfo)
         else:
-            self._storepick(it,      # first is keydict, second is it info
+            self._storepick(it,           # first is keydict, second is it info
                             iteration=it,
                             pickUTC=None,
                             bk_info=None)
 
-    def AIC(self, aroundpick=None, wintrim_noise=1.0, wintrim_sign=1.0):
+    def AIC(self,
+            useraw=False,
+            aroundpick=None,
+            wintrim_noise=1.0,
+            wintrim_sign=1.0):
         """
         This method is defining an AIC picker
         to detect the right on-phase timing of a phase
@@ -274,16 +294,20 @@ class BaIt(object):
                         var2 = 0.00
                 #
                 val1 = ii*var1
-                val2 = (len(td)-ii-1)*var2    # ver2: +1 ver1(thison): -1
+                val2 = (len(td)-ii-1)*var2
                 AIC = np.append(AIC, (val1+val2))
             # -------------------- New idx search (avoid window's boarders)
             # (ascending order min->max) OK!
-            idxLst = sorted(range(len(AIC)), key=lambda k: AIC[k])
-            if idxLst[0]+1 not in (1, len(AIC)):  # need index. start from 1
-                idx = idxLst[0]+1
-            else:
-                idx = idxLst[1]+1
-            # Old idx search (here for reference)
+            idx = sorted(range(len(AIC)), key=lambda k: AIC[k])[0]
+
+            # --- OLD (here for reference)
+            # idxLst = sorted(range(len(AIC)), key=lambda k: AIC[k])
+            # if idxLst[0]+1 not in (1, len(AIC)):  # need index. start from 1
+            #     idx = idxLst[0]+1
+            # else:
+            #     idx = idxLst[1]+1
+
+            # --- REALLY OLD  idx search (here for reference)
             # idx_old=int(np.where(AIC==np.min(AIC))[0])+1
             # ****   +1 order to make multiplications
             # **** didn't take into account to minimum at the border of
@@ -291,6 +315,13 @@ class BaIt(object):
             return idx, AIC
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MainAIC
+
+        # --- Select trace 22022019 --> v2.1.6
+        if useraw:
+            self._setworktrace(self.wt, "RAW")  # sometimes is better for AIC
+        else:
+            self._setworktrace(self.wt, "PROC")
+        #
         if not isinstance(self.wt, Trace):
             logger.error("Input trace is not a valid ObsPy trace: %s" %
                          type(self.wt))
@@ -382,22 +413,44 @@ class BaIt(object):
             logger.info(" NO Pick Evaluation set --> accept anyway")
             return True
 
-    def getTruePick(self, idx=0):
-        """ return the baitdict idx key among the sorted TRUE pick """
+    def getTruePick(self, idx=0, picker="BK", format4quake=False):
+        """
+        Method to extract infor from self.baitdic
+         - idx: the ordered index of validate pick (TRUE)
+         - picker: define the picktime of TRUE pick to be analyzed and
+                   used in the sorting process
+         - format4quake: return UTCDateTIme pick (related to picker)
+                         and pickinfo (always from BK algorithm)
+
+        """
+        if picker.lower() not in ("bk", "aic"):
+            raise BE.BadKeyValue()
+        #
         tmplst = []  # list of valid tuple [0] pickkey [1] UTCpick
         # populate
         for _kk in self.baitdict.keys():
             if self.baitdict[_kk]['evaluatePick']:
-                tmplst.append((_kk, self.baitdict[_kk]['pickUTC']))
-
-        pprint.pprint(tmplst)
+                if picker.lower() == 'bk':
+                    tmplst.append((_kk, self.baitdict[_kk]['pickUTC']))
+                elif picker.lower() == 'aic':
+                    tmplst.append((_kk, self.baitdict[_kk]['pickUTC_AIC']))
         # extract
         tmplst.sort(key=itemgetter(1))
         try:
-
-            return self.baitdict[tmplst[idx][0]]
+            pd = self.baitdict[tmplst[idx][0]]
         except IndexError:
-            return None
+            if format4quake:
+                return None, None
+            else:
+                return None
+        #
+        if format4quake:
+            if picker.lower() == 'bk':
+                return pd['pickUTC'], pd['bk_info']
+            elif picker.lower() == 'aic':
+                return pd['pickUTC_AIC'], pd['bk_info']
+        else:
+            return pd
 
     def plotPicks(self, **kwargs):
         """

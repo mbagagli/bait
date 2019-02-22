@@ -16,6 +16,11 @@ class BadInstance(Error):
     pass
 
 
+class BadKeyValue(Error):
+    """ Raised when important instance checks are not respected """
+    pass
+
+
 class MissingVariable(Error):
     """ Raised when a parameter/value is missing """
     pass

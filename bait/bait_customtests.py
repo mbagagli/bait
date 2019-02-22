@@ -40,9 +40,13 @@ def _createCF(inarray):
     Simple method to create the carachteristic function of BaIt
     picking algorithm
 
+    *** NB: The outarray of 13.02.2019 (the squared one), better enanche
+            impulsive features of the signal, but it's really weak on
+            emergent arrivals, especially with The SignalAmp feature.
     """
-    # ORIGINAL: outarray = abs(inarray)
-    outarray = abs(inarray**2)      # MB 13.02.2019
+    outarray = abs(inarray)         # ORIGINAL
+    # outarray = abs(inarray**2)      # MB 13.02.2019 - test -
+    # outarray = np.sqrt(abs(inarray))      # MB 13.02.2019 - test -
     outarray = _normalizeTrace(outarray, rangeVal=[0, 1])
     return outarray
 
@@ -70,7 +74,7 @@ def SignalAmp(wt, bpd, timewin, thr_par_1):
 
     # ------ Out + Log
     if Signal.data.max() <= thr_par_1:
-        logger.debug((' '*4+'FALSE  %s: %5.3f > %5.3f'+os.linesep) % (
+        logger.debug((' '*4+'FALSE  %s: %5.3f < %5.3f'+os.linesep) % (
                                             tfn, Signal.data.max(), thr_par_1))
         return (False, Signal.data.max())
     else:

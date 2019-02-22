@@ -27,7 +27,7 @@ def plotBait(tr,
         logger.error('%s: not a valid ObsPy trace ...' % tfn)
         return False
     #
-    fig = plt.figure(figsize=(8,4.5))
+    fig = plt.figure(figsize=(8, 4.5))
 
     CF_Trace = tr.copy()
     CF_Trace.data = BCT._createCF(CF_Trace.data)
