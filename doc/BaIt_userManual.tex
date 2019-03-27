@@ -1,0 +1,118 @@
+\documentclass[11pt,a4paper,twocolumns]{article}
+%% --------------------------------------------- PREAMBLE
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian,english]{babel}
+\usepackage{lipsum}
+%% Mathematics
+\usepackage{amsmath,amssymb,amsthm}
+%% Images & Graphics & Tables
+\usepackage{graphicx}
+\usepackage[usenames,dvipsnames,pdftex]{color}
+\usepackage[pdftex]{hyperref}
+\usepackage{booktabs}
+\usepackage[labelfont=bf]{caption}
+
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true}
+
+\usepackage{siunitx}
+
+
+%% Bibliography
+%\usepackage[style=authoryear-comp,backend=bibtex,hyperref]{biblatex} % def stile per la biblio! 
+%\usepackage[babel]{csquotes}
+%\bibliography{biblio}
+
+%% --------------------------------------------- First Page TITLE
+\title{\textbf{Ba\textit{It}: an Iterative Baer picker \\ User Manual \\ \texttt{v2.1.6}}}
+\author{Matteo Bagagli -- ETH, Zurich}
+\date{\today}
+
+%% --------------------------------------------- BEGIN DOCUMENT
+\begin{document}
+
+
+%% --------------------------------------------- NewCommand
+\newcommand{\bait}{\textbf{Ba}\textit{It} }
+
+%% ---------------------------------------------
+
+\maketitle
+\tableofcontents
+\section{Introduction}
+Picking algorithm have always been a foundamental part in the seismological routine workflows of observatories  ,
+and more often they have been such a painful step in the workflow for
+tuning and theri semi--automatic procedure as normally a cross-check by human eye is required.
+This steps, though, cannot be completely erased at the moment and neither this program
+show
+
+
+\section{Installation}
+The code has been developed in Python--3 and is distributed under the \emph{GPL-v3} license guidelines. 
+A number of dependecies are requested and are listed in the \texttt{requirements.txt}. In order to avoid major issues and libraries conflicts it's strongly recommended to use a \emph{virtual environment}; for this task you could either use conda or pip--virtualenv as your preference.
+To semplify this passage, a file is provided under the \texttt{config} folder~(\texttt{bait\_env.yml}), that you could use to generate the environment by typing:
+\begin{lstlisting}[language=Python]
+$ cd /where/the/package/is
+$ conda env create -f ./config/bait_env.yml
+\end{lstlisting}
+
+Strictly speaking, the installation part is trivial: once the environment has been set-up, all you need to do is to open a terminal and type:
+\begin{lstlisting}[language=Python]
+$ cd /where/the/package/is
+$ pip intall .
+\end{lstlisting}
+
+Once the package is successfully installed, you could verify the software integrity by tiping:
+\begin{lstlisting}[language=Python]
+$ cd /where/the/package/is
+$ pytest
+\end{lstlisting}
+
+Once all the test are passed, you could start to use the software without any problems.
+
+\section{The code}
+The package here presented is composed by 3 different modules:
+\begin{itemize}
+\item[•] \texttt{bait.py}: this module contains all the main \bait class and can be considered the \emph{core} of this package.
+\item[•] \texttt{bait\_customtests.py}: this module contains all the test-functions aimed at the pick validation and could be expanded with customizable test by the user (see Sect.\ref{sec:custom}).
+\item[•] \texttt{bait\_plots.py}: this module contains the necessary function to plot the waveforms and relative \bait charachteristic functions and picks.
+\item[•] \texttt{bait\_errors.py}: in this modules are contained various type of errors raised by the software. This module can be expanded with additional errors if the user require so (see Sect.\ref{sec:custom}).
+\end{itemize}
+
+\subsection{Main flow}
+The workflow of the picker is schematized in Fig.\ref{fig:workflow}. At the actual stage the \bait picking algorithm is able to detect properly the P-first arrival times and could detect sometimes the secondary as well.
+For each waveform the user can decide to apply a processing step (higly recommended before picking stage) or turn it off. This picking approach consist in apply \num{2} two different parameters setup of the same picker: if the first call doesn't return a pick, the waveform is discarded and no picks are found, while instead a pick is found an evaluation on the pick begins. If the evaluation is positive the pick is accepted as a first arrival and  the program switch to the next waveform. If the picks is negatively evaluated (rejected) a secondary setup on the trimmed trace is called (\textit{auxiliary picker}). From this point, if a pick is found it will be evaluated and eventually accepted, otherwise the waveform will be discarded and no first arrival will be assigned. If, the secondary picks are rejected, then the loop of trimming--picking--evaluating will continue until the maximum iteration number is reached.
+
+\begin{equation}
+	CF_{i}= \left|\frac{2\cdot(wave_{i}-min(wave))}{max(wave)-min(wave)}-1\right|
+	\label{eq:cf}
+\end{equation}
+
+
+
+\subsection{Picks evaluation stage}
+The evaluation stage is done over a carachteristic function (CF) that
+The evaluation part is composed of \num{3} steps. The first one is to create a charachteristic function of the waveform as described in Eq.\ref{eq:cf} over which some user--customized tests will be performed to legitimate the pick. The two tests performed to avoid mispicks in this dataset are represented by the two conditions described  in Eq.\ref{eq:test1} and Eq.\ref{eq:test2}.
+
+\begin{equation}
+	max(W_{1}) \geqslant PAR_{1}
+	\label{eq:test1}
+\end{equation}
+%
+\begin{equation}
+	mean(W_{n}) \geqslant PAR_{2} \cdot mean(W_{0})
+	\label{eq:test2}
+\end{equation}
+
+
+\section{Customization}
+\label{sec:custom}
+This software has been developed by an user that doesn't like the frustation of every  one user to one other user still. With this general idea in mind, the user 
+
+\section{Examples}
+
+
+
+%\printbibliography
+\end{document}

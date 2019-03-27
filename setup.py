@@ -18,7 +18,6 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=required_list,
     packages=setuptools.find_packages(),
-    # package_dir={'': 'quake'},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

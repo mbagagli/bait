@@ -1,11 +1,11 @@
 """
 This module is extracted from BaIt v2.1.0.
-This iterative picking algorithm is hopefully performing better
+This object-oriented iterative picking algorithm is hopefully
+performing better than the previous sequential one.
 """
 
 # lib for MAIN
 import logging
-import pprint  # MB debug
 # lib for BAIT
 from bait import bait_errors as BE
 from bait import bait_plot as BP
@@ -32,6 +32,10 @@ class BaIt(object):
     If pick is found, evaluation is pursued, otherwise returns
     no valid picks.
 
+    *** NB If stream_raw==None even if user AIC config specify the
+    raw option, the processed will be used instead, without throwing
+    any errors
+
     """
     def __init__(self,
                  stream,
@@ -47,11 +51,11 @@ class BaIt(object):
         self.st = stream
         self.straw = stream_raw
         self.wc = channel
+        self.wt = None                          # workingtrace
+        self._setworktrace(channel, "PROC")
         self.maxit = max_iter
         self.opbk_main = opbk_main
         self.opbk_aux = opbk_aux
-        self.wt = None                          # workingtrace
-        self._setworktrace(channel, "PROC")
         #
         self.pick_test = test_pickvalidation
         self.post_test = test_postvalidation
@@ -168,11 +172,6 @@ class BaIt(object):
                         self.baitdict[str(ITERATION)]['evaluatePick'],
                         self.baitdict[str(ITERATION)]['evaluatePick_tests']))
 
-                    # MB debug
-                    pprint.pprint("PickAccepted: %s - Results: %s" % (
-                        self.baitdict[str(ITERATION)]['evaluatePick'],
-                        self.baitdict[str(ITERATION)]['evaluatePick_tests']))
-
                 if self.baitdict[str(ITERATION)]['evaluatePick']:
                     VALIDPICKS = True
                     # If pick is valid and user wants AIC --> call AIC picker
@@ -205,7 +204,7 @@ class BaIt(object):
 
         """
         # --- Select trace 22022019 --> v2.1.6
-        self._setworktrace(self.wt, "PROC")  # baer picker needs always proc
+        self._setworktrace(self.wc, "PROC")  # baer picker needs always proc
         if not isinstance(self.wt, Trace):
             raise BE.BadInstance()
         # -------------------------------------------------------- Cut Trace
@@ -217,7 +216,7 @@ class BaIt(object):
         # ------------------------------------------------- v.1.1 sample2sec
         # mainly we change the input from BaIt_Config in SECONDS and convert here in SAMPLES
         # Python3 round(float)==int // Python2 round(float)==float --> int(round(... to have compatibility
-        df = self.wt.stats.sampling_rate
+        df = tr.stats.sampling_rate
         preset_len_NEW = self._sec2sample(preset_len, df)
         tupevent_NEW = self._sec2sample(tupevent, df)            # tupevent: should be the inverse of high-pass
                                                                  #           freq or low freq in bandpass
@@ -226,10 +225,12 @@ class BaIt(object):
         # ----------------------------------------------------------- Picker
         PickSample, PhaseInfo, _CF = pk_baer(tr.data, df, tdownmax_NEW,
                                              tupevent_NEW, thr1, thr2,
-                                             preset_len_NEW, p_dur_NEW)
+                                             preset_len_NEW, p_dur_NEW,
+                                             return_cf=True)
         PickTime = PickSample/df    # convert pick from samples
                                     # to seconds (Absolute from first sample)
         PhaseInfo = str(PhaseInfo).strip()
+        logger.debug("%s - %s" % (tr.stats.starttime+PickTime, PhaseInfo))
         # ------------------------------------------------------------- Save
         if PhaseInfo != '':  # Valid Pick
             self._storepick(it,           # first is keydict, second is it info
@@ -284,12 +285,12 @@ class BaIt(object):
             for ii in range(1, len(td)):
                 with np.errstate(divide='raise'):
                     try:
-                        var1 = np.log10(np.var(td[0:ii]))
+                        var1 = np.log(np.var(td[0:ii]))
                     except FloatingPointError:  # if var==0 --> log is -inf
                         var1 = 0.00
                     #
                     try:
-                        var2 = np.log10(np.var(td[ii:]))
+                        var2 = np.log(np.var(td[ii:]))
                     except FloatingPointError:  # if var==0 --> log is -inf
                         var2 = 0.00
                 #
@@ -318,9 +319,9 @@ class BaIt(object):
 
         # --- Select trace 22022019 --> v2.1.6
         if useraw:
-            self._setworktrace(self.wt, "RAW")  # sometimes is better for AIC
+            self._setworktrace(self.wc, "RAW")  # sometimes is better for AIC
         else:
-            self._setworktrace(self.wt, "PROC")
+            self._setworktrace(self.wc, "PROC")
         #
         if not isinstance(self.wt, Trace):
             logger.error("Input trace is not a valid ObsPy trace: %s" %
@@ -330,13 +331,13 @@ class BaIt(object):
         # Select TraceSlice:
         tr = self.wt.copy()
         if aroundpick:
-            _tmp = self.wt.slice(aroundpick - wintrim_noise,
-                                 aroundpick + wintrim_sign,
-                                 nearest_sample=True)
-            td = _tmp.data
+            tr.trim(aroundpick - wintrim_noise,
+                    aroundpick + wintrim_sign,
+                    nearest_sample=True)
+            td = tr.data
         else:
             # Entire stream
-            td = self.wt.data
+            td = tr.data
 
         # Get only the minimum of The CF
         idx, aicfun = AICcf(td)
@@ -344,9 +345,20 @@ class BaIt(object):
         # time= NUMsamples/df OR NUMsamples*dt
         logger.debug("AIC sample: %r" % idx)
         if aroundpick:
-            pickTime_UTC = _tmp.stats.starttime + (idx * _tmp.stats.delta)
+            pickTime_UTC = tr.stats.starttime + (idx * tr.stats.delta)
         else:
             pickTime_UTC = tr.stats.starttime + (idx * tr.stats.delta)
+
+        # #MB nextline
+        # from quake.plot import plot_QUAKE_CF   #MB
+        # plot_QUAKE_CF(Stream(traces=tr),
+        #                   {'AIC': aicfun},
+        #                   chan="*Z",
+        #                   picks={'aic_p': idx},
+        #                   inax=None,
+        #                   normalize=True,
+        #                   show=True)
+
         return pickTime_UTC, aicfun, idx
 
     def evaluatePick_BK(self, pkey):
@@ -367,6 +379,7 @@ class BaIt(object):
             EVENTID,STATION,ITERATION,PICK,PAR_1,TEST_1,TEST_2
         """
         testResults = []
+        self._setworktrace(self.wc, "PROC")  # ALWAYS PROCESSED
         # ------------------------------------------- logging
         # LOG_ID.write(('%s'+CMN.FSout+'%s'+CMN.FSout+'%d'+CMN.FSout+'%s'+os.linesep )%(
         #              InTrace.stats['BaIt_DICT']['EVENTID'],
@@ -452,14 +465,25 @@ class BaIt(object):
         else:
             return pd
 
-    def plotPicks(self, **kwargs):
+    def plotPicks(self, plotraw=False, **kwargs):
         """
         Wrapper method that calls theplotting routine
         Returns:
          - fig handle
          - ax tuples (more than one possible)
         """
-        fig, ax = BP.plotBait(self.wt, self.baitdict, **kwargs)
+        # Create CF always on PROC trace
+        self._setworktrace(self.wc, "PROC")
+        cf = self.wt.copy()
+        cf.data = BCT._createCF(cf.data)
+
+        # select time series
+        if plotraw:
+            self._setworktrace(self.wc, "RAW")
+        else:
+            self._setworktrace(self.wc, "PROC")
+        #
+        fig, ax = BP.plotBait(self.wt, cf, self.baitdict, **kwargs)
         return fig, ax
 
     # def evaluatePick_BK_POST(self):

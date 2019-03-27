@@ -1,0 +1,83 @@
+# The algorithm converts the trace in integer before work and normalize up to 10,000 
+#
+# thresh1= threshold_1
+# thresh12= threshold_2
+
+
+::: PRESET_LEN (int: number of samples used to evaluate sigma on C)
+
+len2=2*preset_len
+The variance of SF(t) is updated as long as CF(t) is less than S2(here thresh12)
+and the running index is less than len2
+However, this is done only for the first len2 points. len2=2*preset_len
+
+
+::: tup_event [Baer1987]
+
+Should be defined as the corner period of the highpass filter (1/HPf)
+
+a minimum duration of 0.3 sec is required (local->regional events). [Should anyway amount to at least one full cycle of the longest periods expected.]
+
+::: tdown event [Baer1987]
+
+Mean of the 2 corner periods
+
+*** The tup-tdown parameter should be referred to SF function
+*** the threshold to the CF function
+
+—————————————————————————————— General Notes
+ipkflg (that is the trigger flag) gets more value if threshold is passed by 4 times thresh_1!!!
+
+The tup_tdown are REAL TIME in SECOND
+
+Preset_len (update of sigma ecc..) can be used to define better the tradeoffi between emergentand impulsive arrive!
+
+The threshold1 /threshold12 refers to CF and to 256
+
+——————————————————————————————
+trace[ii]=(int)((256.0*reltrc[ii]/scale)+0.5); its normalized by its max value
+
+
+::: PDUR
+p_dur potrebbe essere usato per la valutazione dell'ampiezza (massima) e decidere il PHASEINFO
+
+Cerca la massima AMP nei secondi dopo il trigger!!! --> pamp
+
+xr=(float)pamp/(float)noise [noise is the largest amplitude before first pick in trace!]
+
+-------|--------
+ CLASS     xr
+-------|--------
+   0        > 8
+   1      6 - 8
+   2      4 - 6
+   3      1.5 - 4
+   4        < 1.5
+
+
+The pick is DEFAULTED as an EMERGENT phase [E]
+The arrive is classified IMPULSIVE [I] only if 
+defined I se di classe 0 o 1(impulsive)
+
+
+—————————————————————————————— SEISCOMP3
+From comparison with SeisComp3 a fixed value for tupevent and tdownevent is needed.
+
+	//  if dtime exceeds tdownmax, the trigger is examined for validity
+	int tdownmax= samplespersec * (1/f1 + 1/f2)/2; // for bandpass
+	//  tdownmax= samplespersec * 1/f1; // for highpass
+	// tdownmax= samplespersec * 1/f2;  // for lowpass
+	// tdownmax = samplespersec; // default
+
+	// min nr of samples for itrm to be accepted as a pick */
+	int tupevent= samplespersec * 1/f1; // for bandpass
+	// tupevent= samplespersec * 1/f1; // for highpass
+	// tupevent= samplespersec * 1; // for lowpass
+	// tupevent = samplespersec; // default
+
+
+—————————————————————————————— FRASI AD EFFETTO
+Usare l'user friendly BAERpicker per poi usare la potenza di precisione nell'intorno di
+un semplice AIC picker)
+
+

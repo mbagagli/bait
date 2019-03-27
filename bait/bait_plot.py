@@ -1,7 +1,6 @@
 import sys
 from obspy.core.trace import Trace
 import logging
-from bait import bait_customtests as BCT
 # plot
 import matplotlib.pyplot as plt
 from collections import OrderedDict
@@ -14,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def plotBait(tr,
+             cf,
              baitdict,
              figtitle=None,
              show=False,
@@ -24,19 +24,19 @@ def plotBait(tr,
     """
     tfn = sys._getframe().f_code.co_name
     if not isinstance(tr, Trace):
-        logger.error('%s: not a valid ObsPy trace ...' % tfn)
+        logger.error('%s: not a valid ObsPy trace (TR) ...' % tfn)
+        return False
+    if not isinstance(cf, Trace):
+        logger.error('%s: not a valid ObsPy trace (CF) ...' % tfn)
         return False
     #
     fig = plt.figure(figsize=(8, 4.5))
-
-    CF_Trace = tr.copy()
-    CF_Trace.data = BCT._createCF(CF_Trace.data)
 
     ax1 = plt.subplot(211)
     ax1.plot(tr.times("matplotlib"), tr.data, color='black')
 
     ax2 = plt.subplot(212, sharex=ax1)  # , sharey=ax1)
-    ax2.plot(CF_Trace.times("matplotlib"), CF_Trace.data, color='blue')
+    ax2.plot(cf.times("matplotlib"), cf.data, color='blue')
 
     # ---- Plot picks
     for _kk, _vv in baitdict.items():
