@@ -1,0 +1,79 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.9 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{baer_automatic_1987}{article}{}
+      \name{author}{2}{}{%
+        {{uniquename=0,uniquepart=base,hash=f5583db0194fa9686429b92a5b6683e2}{%
+           family={Baer},
+           familyi={B\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{uniquename=0,uniquepart=base,hash=d04bd76e6b46ec71c8dcd74fe34f5903}{%
+           family={Kradolfer},
+           familyi={K\bibinitperiod},
+           given={U.},
+           giveni={U\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \strng{fullhash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \strng{bibnamehash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \strng{authorbibnamehash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \strng{authornamehash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \strng{authorfullhash}{e12274115a4ec5dcd3dbdcbbf3fca7de}
+      \field{sortinit}{B}
+      \field{sortinithash}{276475738cc058478c1677046f857703}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{day}{1}
+      \field{issn}{0037-1106}
+      \field{journaltitle}{Bulletin of the Seismological Society of America}
+      \field{langid}{english}
+      \field{month}{8}
+      \field{number}{4}
+      \field{shortjournal}{Bulletin of the Seismological Society of America}
+      \field{title}{An automatic phase picker for local and teleseismic events}
+      \field{urlday}{18}
+      \field{urlmonth}{4}
+      \field{urlyear}{2019}
+      \field{volume}{77}
+      \field{year}{1987}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{1437\bibrangedash 1445}
+      \range{pages}{9}
+      \verb{file}
+      \verb Full Text PDF:/home/matteo/Zotero/storage/8HJAZWQZ/Baer and Kradolfer - 1987 - An automatic phase picker for local and teleseismi.pdf:application/pdf;Snapshot:/home/matteo/Zotero/storage/WTWQUBKK/an-automatic-phase-picker-for-local-and.html:text/html
+      \endverb
+      \verb{urlraw}
+      \verb https://pubs.geoscienceworld.org/ssa/bssa/article-abstract/77/4/1437/119016/an-automatic-phase-picker-for-local-and
+      \endverb
+      \verb{url}
+      \verb https://pubs.geoscienceworld.org/ssa/bssa/article-abstract/77/4/1437/119016/an-automatic-phase-picker-for-local-and
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
