@@ -183,17 +183,17 @@ class BaIt(object):
                                         pickUTC_AIC=aicpick,
                                         AICcf=aicfun)
 
-            else:     # no pick ->skip to next trace
+            else:     # no pick -> exit the loop
                 logger.error(('~~~ No pick @ Iteration %d') % (ITERATION))
                 break
         # Post - Picking
         if not VALIDPICKS:
+            # MB: maybe make it raise some kind of error and catch it
             logger.error("*** No valid pick found")
+            raise BE.MissingVariable({'message': "No TRUE pick found!"})
         else:
             if self.post_test:
                 self.evaluatePick_BK_POST()
-        #
-        return True
 
     def picker(self, it, tdownmax, tupevent, thr1, thr2, preset_len, p_dur):
         """
