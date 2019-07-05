@@ -188,7 +188,6 @@ class BaIt(object):
                 break
         # Post - Picking
         if not VALIDPICKS:
-            # MB: maybe make it raise some kind of error and catch it
             logger.error("*** No valid pick found")
             raise BE.MissingVariable({'message': "No TRUE pick found!"})
         else:
