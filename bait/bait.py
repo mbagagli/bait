@@ -484,6 +484,12 @@ class BaIt(object):
                         # MB: increment the index of validpick and go
                         #     to the next pickdict
                         validpicks_idx = validpicks_idx + 1
+            #
+            # MB: if it ends up here, no picks are found for that index
+            if compact_format:
+                return None, None
+            else:
+                return None
 
         elif isinstance(idx, str) and idx.lower() in ("all", ":"):
             tmplst = []
@@ -502,7 +508,6 @@ class BaIt(object):
                             tmplst.append((pd['pickUTC_AIC'], pd['bk_info']))
                     else:
                         tmplst.append(pd)
-            #
             return tmplst
 
         else:

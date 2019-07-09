@@ -38,13 +38,13 @@ BAIT_PAR_DICT = {
     'test_pickvalidation': {
           'SignalAmp': [0.5, 0.05],
           'SignalSustain': [0.2, 5, 1.2],
-          'LowFreqTrend': [0.2, 0.80],
+          'LowFreqTrend': [0.2, 0.80]
     },
     'pickAIC': True,
     'pickAIC_conf': {
           'useraw': True,
           'wintrim_noise': 0.8,
-          'wintrim_sign': 0.5,
+          'wintrim_sign': 0.5
     }
 }
 
@@ -196,3 +196,38 @@ def test_returnedpick_all():
 
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_return_none():
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    # Modify to not pick anything ==> trick evaluation step
+    BP.pick_test = {
+          'SignalAmp': [0.1, 0.9]}
+    #
+    try:
+        BP.CatchEmAll()
+        # If I arrive here --> the exception is skipped (not good)
+        errors.append("Exception skipped, false positive (TRUE pick found " +
+                      "even though NO REAL TRUE pick are there!")
+        assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+    except BE.MissingVariable:
+        # BP.plotPicks(show=True)
+        # ========================================== Tests
+        picklist = BP.getTruePick(idx="all", picker="AIC", compact_format=True)
+        if picklist:
+            errors.append("Something returned even though no TRUE pick found")
+
+        pT, pI = BP.getTruePick(idx=0, picker="BK", compact_format=True)
+        if pT or pI:
+            errors.append("Something returned even though no TRUE pick found")
+
+        pD = BP.getTruePick(idx=0, picker="BK", compact_format=False)
+        if pD:
+            errors.append("Something returned even though no TRUE pick found")
+        #
+        assert not errors, "Errors occured:\n{}".format("\n".join(errors))
