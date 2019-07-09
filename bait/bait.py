@@ -213,31 +213,38 @@ class BaIt(object):
                          self.wt.stats.endtime)
 
         # ------------------------------------------------- v.1.1 sample2sec
-        # mainly we change the input from BaIt_Config in SECONDS and convert here in SAMPLES
-        # Python3 round(float)==int // Python2 round(float)==float --> int(round(... to have compatibility
+        # Input from BaIt_Config in SECONDS and convert here in SAMPLES
+        # Python3 round(float)==int // Python2 round(float)==float -->
+        #                            int(round(... to have compatibility
         df = tr.stats.sampling_rate
         preset_len_NEW = self._sec2sample(preset_len, df)
-        tupevent_NEW = self._sec2sample(tupevent, df)            # tupevent: should be the inverse of high-pass
-                                                                 #           freq or low freq in bandpass
-        tdownmax_NEW = self._sec2sample(tdownmax, df)            # Half of tupevent
-        p_dur_NEW = self._sec2sample(p_dur, df)                  # time-interval in which MAX AMP is evaluated
+        # tupevent: should be the inverse of high-pass
+        #           freq or low freq in bandpass
+        tupevent_NEW = self._sec2sample(tupevent, df)
+        # tdownmax: Half of tupevent
+        tdownmax_NEW = self._sec2sample(tdownmax, df)
+        # p_dur: time-interval in which MAX AMP is evaluated
+        p_dur_NEW = self._sec2sample(p_dur, df)
         # ----------------------------------------------------------- Picker
         PickSample, PhaseInfo, _CF = pk_baer(tr.data, df, tdownmax_NEW,
                                              tupevent_NEW, thr1, thr2,
                                              preset_len_NEW, p_dur_NEW,
                                              return_cf=True)
-        PickTime = PickSample/df    # convert pick from samples
-                                    # to seconds (Absolute from first sample)
+        # convert pick from samples
+        # to seconds (Absolute from first sample)
+        PickTime = PickSample/df
         PhaseInfo = str(PhaseInfo).strip()
         logger.debug("%s - %s" % (tr.stats.starttime+PickTime, PhaseInfo))
         # ------------------------------------------------------------- Save
         if PhaseInfo != '':  # Valid Pick
-            self._storepick(it,           # first is keydict, second is it info
+            # first is keydict, second is it info
+            self._storepick(it,
                             iteration=it,
                             pickUTC=tr.stats.starttime+PickTime,
                             bk_info=PhaseInfo)
         else:
-            self._storepick(it,           # first is keydict, second is it info
+            # first is keydict, second is it info
+            self._storepick(it,
                             iteration=it,
                             pickUTC=None,
                             bk_info=None)
@@ -278,7 +285,7 @@ class BaIt(object):
 
             td must be a  `numpy.ndarray`
             """
-            # --------------------  Creation of the carachteristic function
+            # ----------------  Creation of the carachteristic function
             # AIC(k)=k*log(variance(x[1,k]))+(n-k+1)*log(variance(x[k+1,n]))
             AIC = np.array([])
             for ii in range(1, len(td)):
@@ -296,13 +303,13 @@ class BaIt(object):
                 val1 = ii*var1
                 val2 = (len(td)-ii-1)*var2
                 AIC = np.append(AIC, (val1+val2))
-            # -------------------- New idx search (avoid window's boarders)
+            # ---------------- New idx search (avoid window's boarders)
             # (ascending order min->max) OK!
             idx = sorted(range(len(AIC)), key=lambda k: AIC[k])[0]
 
             # --- OLD (here for reference)
             # idxLst = sorted(range(len(AIC)), key=lambda k: AIC[k])
-            # if idxLst[0]+1 not in (1, len(AIC)):  # need index. start from 1
+            # if idxLst[0]+1 not in (1, len(AIC)):
             #     idx = idxLst[0]+1
             # else:
             #     idx = idxLst[1]+1
@@ -318,7 +325,7 @@ class BaIt(object):
 
         # --- Select trace 22022019 --> v2.1.6
         if useraw:
-            self._setworktrace(self.wc, "RAW")  # sometimes is better for AIC
+            self._setworktrace(self.wc, "RAW")
         else:
             self._setworktrace(self.wc, "PROC")
         #
@@ -373,22 +380,25 @@ class BaIt(object):
             CMN.TW could be improved later in Config file (and passed by Main)
 
         NB: CMN.TW should be equal to the lowest class time uncertainties (old)
-        NB: CMN.TW should be tuned with the type of regional/local/teleseismic ev.
+        NB: CMN.TW should be tuned with the type of regional/local/teleseism ev
         NB: Sequence of iteration log //
             EVENTID,STATION,ITERATION,PICK,PAR_1,TEST_1,TEST_2
         """
         testResults = []
         self._setworktrace(self.wc, "PROC")  # ALWAYS PROCESSED
         # ------------------------------------------- logging
-        # LOG_ID.write(('%s'+CMN.FSout+'%s'+CMN.FSout+'%d'+CMN.FSout+'%s'+os.linesep )%(
-        #              InTrace.stats['BaIt_DICT']['EVENTID'],
-        #              InTrace.stats.station,
-        #              it,
-        #              InTrace.stats['BaIt_DICT'][str(it)]['baerpick'].strftime(CMN.GMTout_FMT) ))
+        # LOG_ID.write(
+        #     ('%s' + CMN.FSout + '%s' + CMN.FSout + '%d' + CMN.FSout +'%s' +
+        #       os.linesep) % (
+        #      InTrace.stats['BaIt_DICT']['EVENTID'],
+        #      InTrace.stats.station,
+        #      it, (
+  # InTrace.stats['BaIt_DICT'][str(it)]['baerpick'].strftime(CMN.GMTout_FMT))))
 
-        # ----------------------- Perform TESTS + Append to LOG info needed
+        # ------------------- Perform TESTS + Append to LOG info needed
         # *** NB always give a copy of input trace to the TEST!
-        # *** NB "InTrace.copy(),it,CMN,LOG_ID" should be mandatory for every TEST!
+        # *** NB "InTrace.copy(),it,CMN,LOG_ID" should be mandatory for
+        #         every TEST!
         if self.pick_test:
             logger.info("Pick Evaluation: %s" % str(pkey))
             # sorting in alphabetical order the testfunctions
@@ -425,44 +435,80 @@ class BaIt(object):
             logger.info(" NO Pick Evaluation set --> accept anyway")
             return True
 
-    def getTruePick(self, idx=0, picker="BK", format4quake=False):
+    def getTruePick(self, idx=0, picker="BK", compact_format=False):
         """
         Method to extract infor from self.baitdic
          - idx: the ordered index of validate pick (TRUE)
+                If "all" string specified, a list of all the TRUE picks
+                is returned, sorted in time. The picks belong to the
+                specified picker and the format to the specified one.
          - picker: define the picktime of TRUE pick to be analyzed and
                    used in the sorting process
-         - format4quake: return UTCDateTIme pick (related to picker)
+         - compact_format: return UTCDateTIme pick (related to picker)
                          and pickinfo (always from BK algorithm)
 
+        v2.2.0: igf idx == "all" then, all the TRUE picks of a given
+                picker will be returned in a list! (will return None
+                in case no picks will be found)
         """
         if picker.lower() not in ("bk", "aic"):
-            raise BE.BadKeyValue()
-        #
-        tmplst = []  # list of valid tuple [0] pickkey [1] UTCpick
-        # populate
-        for _kk in self.baitdict.keys():
-            if self.baitdict[_kk]['evaluatePick']:
-                if picker.lower() == 'bk':
-                    tmplst.append((_kk, self.baitdict[_kk]['pickUTC']))
-                elif picker.lower() == 'aic':
-                    tmplst.append((_kk, self.baitdict[_kk]['pickUTC_AIC']))
-        # extract
-        tmplst.sort(key=itemgetter(1))
-        try:
-            pd = self.baitdict[tmplst[idx][0]]
-        except IndexError:
-            if format4quake:
-                return None, None
-            else:
-                return None
-        #
-        if format4quake:
-            if picker.lower() == 'bk':
-                return pd['pickUTC'], pd['bk_info']
-            elif picker.lower() == 'aic':
-                return pd['pickUTC_AIC'], pd['bk_info']
+            raise BE.BadKeyValue({'message': "Wrong picker input " +
+                                  "('bk', 'aic')"})
+
+        # v2.2.0 check that if the user specify "AIC", it should also
+        #        be actived as attribute in the object. Otherwise raise
+        #        an error
+        if picker.lower() in ('aic', 'akaike') and not self.pickAIC:
+            raise BE.MissingAttribute({'message': "AIC asked, but unpicked!"})
+
+        # v2.2.0
+        if isinstance(idx, int):
+            validpicks_idx = 0
+            for _ii in range(len(self.baitdict.keys())):
+                # MB: The storing keys is the iteration of iterative
+                #     process, starting from 0. In this way we go in
+                #     ordered direction
+                storeidx = _ii+1
+                if self.baitdict[str(storeidx)]['evaluatePick']:
+                    # MB: extracting pickdict
+                    pd = self.baitdict[str(storeidx)]
+                    if validpicks_idx == idx:
+                        if compact_format:
+                            if picker.lower() == 'bk':
+                                return pd['pickUTC'], pd['bk_info']
+                            elif picker.lower() == 'aic':
+                                return pd['pickUTC_AIC'], pd['bk_info']
+                        else:
+                            return pd
+                    else:
+                        # MB: increment the index of validpick and go
+                        #     to the next pickdict
+                        validpicks_idx = validpicks_idx + 1
+
+        elif isinstance(idx, str) and idx.lower() in ("all", ":"):
+            tmplst = []
+            for _ii in range(len(self.baitdict.keys())):
+                # MB: The storing keys is the iteration of iterative
+                #     process, starting from 0. In this way we go in
+                #     ordered direction
+                storeidx = _ii+1
+                if self.baitdict[str(storeidx)]['evaluatePick']:
+                    # MB: extracting pickdict
+                    pd = self.baitdict[str(storeidx)]
+                    if compact_format:
+                        if picker.lower() == 'bk':
+                            tmplst.append((pd['pickUTC'], pd['bk_info']))
+                        elif picker.lower() == 'aic':
+                            tmplst.append((pd['pickUTC_AIC'], pd['bk_info']))
+                    else:
+                        tmplst.append(pd)
+            #
+            return tmplst
+
         else:
-            return pd
+            logger.errors("Wrong index type/number")
+            raise BE.BadInstance()
+
 
     def plotPicks(self, plotraw=False, **kwargs):
         """
