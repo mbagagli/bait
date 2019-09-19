@@ -5,8 +5,8 @@ BaIt is a software created around the famous and stable Baer-Kradolfer picking a
 The acronym stands for "**It**erative **Ba**er picker"
 
 *  AUTHOR: _Matteo Bagagli @ ETH-Zurich_
-* VERSION: _2.1.0_
-*    DATE: _02/2019_
+* VERSION: _2.2.1_
+*    DATE: _09/2019_
 
 ----------
 
