@@ -6,13 +6,12 @@ performing better than the previous sequential one.
 
 # lib for MAIN
 import logging
+import numpy as np
 # lib for BAIT
 from bait import bait_errors as BE
 from bait import bait_plot as BP
 from bait import bait_customtests as BCT
 from obspy.signal.trigger import pk_baer
-from operator import itemgetter
-import numpy as np
 # lib for Errors
 from obspy.core.trace import Trace
 from obspy.core.stream import Stream
@@ -435,85 +434,103 @@ class BaIt(object):
             logger.info(" NO Pick Evaluation set --> accept anyway")
             return True
 
-    def getTruePick(self, idx=0, picker="BK", compact_format=False):
+    def extract_true_pick(self, idx=0, picker="BK", compact_format=False):
+        """ Public method to extract the true picks obtained by the BAIT
+            algorithm.
+             - idx: the ordered index of valid pick (TRUE)
+                    If "all" string specified, a list of all the valid
+                    picks is returned, sorted in time. The picks belong
+                    to the specified picker and the format to the
+                    specified one.
+             - picker: define the picking method of valid pick to be
+                       extracted and used (eventually) the sorting
+                       process. It can be specified also a list or tuple
+             - compact_format: return UTCDateTIme pick (related to picker)
+                             and pickinfo (always from BK algorithm)
+
+            v2.2.0: igf idx == "all" then, all the TRUE picks of a given
+                    picker will be returned in a list! (will return None
+                    in case no picks will be found)
+
+            NB: If idx=="all"  ==> onle the FIRST string of picker
+                will be used !!!
         """
-        Method to extract infor from self.baitdic
-         - idx: the ordered index of validate pick (TRUE)
-                If "all" string specified, a list of all the TRUE picks
-                is returned, sorted in time. The picks belong to the
-                specified picker and the format to the specified one.
-         - picker: define the picktime of TRUE pick to be analyzed and
-                   used in the sorting process
-         - compact_format: return UTCDateTIme pick (related to picker)
-                         and pickinfo (always from BK algorithm)
+        out_list = []
+        all_true = list(sorted({key: _pd
+                                for key, _pd in self.baitdict.items()
+                                if _pd['evaluatePick']}.items()))
+        true_count = len(all_true)
+        #
+        if not all_true:
+            # If no VALID pick, return empty list == None
+            return out_list
 
-        v2.2.0: igf idx == "all" then, all the TRUE picks of a given
-                picker will be returned in a list! (will return None
-                in case no picks will be found)
-        """
-        if picker.lower() not in ("bk", "aic"):
-            raise BE.BadKeyValue({'message': "Wrong picker input " +
-                                  "('bk', 'aic')"})
+        # Work
+        idx_group = ()
+        picker_group = ()
 
-        # v2.2.0 check that if the user specify "AIC", it should also
-        #        be actived as attribute in the object. Otherwise raise
-        #        an error
-        if picker.lower() in ('aic', 'akaike') and not self.pickAIC:
-            raise BE.MissingAttribute({'message': "AIC asked, but unpicked!"})
-
-        # v2.2.0
-        if isinstance(idx, int):
-            validpicks_idx = 0
-            for _ii in range(len(self.baitdict.keys())):
-                # MB: The storing keys is the iteration of iterative
-                #     process, starting from 0. In this way we go in
-                #     ordered direction
-                storeidx = _ii+1
-                if self.baitdict[str(storeidx)]['evaluatePick']:
-                    # MB: extracting pickdict
-                    pd = self.baitdict[str(storeidx)]
-                    if validpicks_idx == idx:
-                        if compact_format:
-                            if picker.lower() == 'bk':
-                                return pd['pickUTC'], pd['bk_info']
-                            elif picker.lower() == 'aic':
-                                return pd['pickUTC_AIC'], pd['bk_info']
-                        else:
-                            return pd
-                    else:
-                        # MB: increment the index of validpick and go
-                        #     to the next pickdict
-                        validpicks_idx = validpicks_idx + 1
-            #
-            # MB: if it ends up here, no picks are found for that index
-            if compact_format:
-                return None, None
+        # ===== Set up the problem
+        if isinstance(picker, (str, tuple, list)):
+            if isinstance(picker, str):
+                picker_group = (picker,)
             else:
-                return None
+                picker_group = tuple(picker)
+        else:
+            logger.error("Wrong PICKER type")
+            raise BE.BadInstance()
+        #
+        if isinstance(idx, (int, tuple, list)):
+            if isinstance(idx, int):
+                idx_group = (idx,)
+            else:
+                idx_group = tuple(idx)
 
         elif isinstance(idx, str) and idx.lower() in ("all", ":"):
-            tmplst = []
-            for _ii in range(len(self.baitdict.keys())):
-                # MB: The storing keys is the iteration of iterative
-                #     process, starting from 0. In this way we go in
-                #     ordered direction
-                storeidx = _ii+1
-                if self.baitdict[str(storeidx)]['evaluatePick']:
-                    # MB: extracting pickdict
-                    pd = self.baitdict[str(storeidx)]
-                    if compact_format:
-                        if picker.lower() == 'bk':
-                            tmplst.append((pd['pickUTC'], pd['bk_info']))
-                        elif picker.lower() == 'aic':
-                            tmplst.append((pd['pickUTC_AIC'], pd['bk_info']))
-                    else:
-                        tmplst.append(pd)
-            return tmplst
+            idx_group = tuple(range(true_count))
+            picker_group = tuple([picker_group[0]] * true_count)
 
         else:
-            logger.errors("Wrong index type/number")
+            logger.error("Wrong IDX type")
             raise BE.BadInstance()
 
+        # ===== Work it up
+        if len(idx_group) != len(picker_group):
+            logger.error("Error: 'idx' and 'picker' parameter must have " +
+                         "the same length [%d, %d]" % (len(idx_group),
+                                                       len(picker_group)))
+            raise BE.SizeMismatch()
+        #
+        for _xx, _pp in zip(idx_group, picker_group):
+            # ======= Internal checks
+            if _pp.lower() not in ("bk", "aic"):
+                raise BE.BadKeyValue(
+                            {'message': "Wrong picker input ('bk', 'aic')"})
+
+            # v2.2.0 check that if the user specify "AIC", it should also
+            #        be actived as attribute in the object. Otherwise raise
+            #        an error
+            if _pp.lower() in ('aic', 'akaike') and not self.pickAIC:
+                raise BE.MissingAttribute(
+                            {'message': "AIC asked, but unpicked!"})
+
+            # =========================
+            try:
+                if compact_format:
+                    if _pp.lower() == "bk":
+                        out_list.append((all_true[_xx][1]['pickUTC'],
+                                         all_true[_xx][1]['bk_info']))
+                    elif _pp.lower() == "aic":
+                        out_list.append((all_true[_xx][1]['pickUTC_AIC'],
+                                         all_true[_xx][1]['bk_info']))
+                else:
+                    out_list.append(all_true[_xx])
+            except IndexError:
+                # MB: if here means that no more VALID pick are present
+                logger.warning(("Requested index is out of bound! IDX: %d" +
+                                " TOTAL: %d") % (int(_xx), true_count))
+                break
+        #
+        return out_list
 
     def plotPicks(self, plotraw=False, **kwargs):
         """

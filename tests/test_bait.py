@@ -51,7 +51,7 @@ BAIT_PAR_DICT = {
 # --------------------
 
 
-straw = read()
+straw = read("./tests_data/obspyread.mseed")
 stproc = miniproc(straw)
 
 
@@ -85,48 +85,12 @@ def test_raisingerror():
     # ========================================== Tests
     raised = False
     try:
-        BP.getTruePick(idx=0, picker="AIC", compact_format=False)
+        BP.extract_true_pick(idx=0, picker="AIC", compact_format=False)
     except BE.MissingAttribute:
         raised = True
     #
     if not raised:
         errors.append("AIC selection error not raised!")
-    #
-    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
-
-
-def test_returnedpick_single():
-    errors = []
-    #
-    BP = BaIt(stproc,
-              stream_raw=straw,
-              channel="*Z",
-              **BAIT_PAR_DICT)
-    #
-    BP.CatchEmAll()
-    #
-    # BP.plotPicks(show=True)
-    # ========================================== Tests
-
-    # print("%r" % BP.getTruePick(idx=0, picker="AIC", compact_format=True)[0])
-    if (BP.getTruePick(idx=0, picker="AIC", compact_format=True)[0] !=
-       UTCDateTime(2009, 8, 24, 0, 20, 7, 750000)):
-        errors.append("P1 AIC not correct")
-
-    # print("%r" % BP.getTruePick(idx=0, picker="BK", compact_format=True)[0])
-    if (BP.getTruePick(idx=0, picker="BK", compact_format=True)[0] !=
-       UTCDateTime(2009, 8, 24, 0, 20, 7, 720000)):
-        errors.append("P1 BK not correct")
-
-    # print("%r" % BP.getTruePick(idx=1, picker="AIC", compact_format=True)[0])
-    if (BP.getTruePick(idx=1, picker="AIC", compact_format=True)[0] !=
-       UTCDateTime(2009, 8, 24, 0, 20, 8, 710000)):
-        errors.append("P2 AIC not correct")
-
-    # print("%r" % BP.getTruePick(idx=1, picker="BK", compact_format=True)[0])
-    if (BP.getTruePick(idx=1, picker="BK", compact_format=True)[0] !=
-       UTCDateTime(2009, 8, 24, 0, 20, 8, 740000)):
-        errors.append("P2 BK not correct")
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
 
@@ -144,7 +108,8 @@ def test_returnedpick_all():
     # BP.plotPicks(show=True)
     # ========================================== Tests
 
-    picklist = BP.getTruePick(idx="all", picker="AIC", compact_format=True)
+    picklist = BP.extract_true_pick(
+                            idx="all", picker="AIC", compact_format=True)
 
     if len(picklist) != 2:
         errors.append("Wrong AIC list length returned")
@@ -160,7 +125,8 @@ def test_returnedpick_all():
 
     # ------
 
-    picklist = BP.getTruePick(idx="all", picker="BK", compact_format=True)
+    picklist = BP.extract_true_pick(
+                            idx="all", picker="BK", compact_format=True)
 
     if len(picklist) != 2:
         errors.append("Wrong BK list length returned")
@@ -176,22 +142,24 @@ def test_returnedpick_all():
 
     # ------
 
-    picklist = BP.getTruePick(idx="all", picker="AIC", compact_format=False)
+    picklist = BP.extract_true_pick(
+                            idx="all", picker="AIC", compact_format=False)
 
     if len(picklist) != 2:
         errors.append("Wrong ALL AIC pick list length returned")
 
-    if not picklist[0]['iteration'] < picklist[1]['iteration']:
+    if not picklist[0][1]['iteration'] < picklist[1][1]['iteration']:
         errors.append("Iteration ALL AIC sorting not respected")
 
     # ------
 
-    picklist = BP.getTruePick(idx="all", picker="BK", compact_format=False)
+    picklist = BP.extract_true_pick(
+                            idx="all", picker="BK", compact_format=False)
 
     if len(picklist) != 2:
         errors.append("Wrong ALL BK pick list length returned")
 
-    if not picklist[0]['iteration'] < picklist[1]['iteration']:
+    if not picklist[0][1]['iteration'] < picklist[1][1]['iteration']:
         errors.append("Iteration ALL BK sorting not respected")
 
     #
@@ -218,16 +186,233 @@ def test_return_none():
     except BE.MissingVariable:
         # BP.plotPicks(show=True)
         # ========================================== Tests
-        picklist = BP.getTruePick(idx="all", picker="AIC", compact_format=True)
+        picklist = BP.extract_true_pick(
+                              idx="all", picker="AIC", compact_format=True)
         if picklist:
             errors.append("Something returned even though no TRUE pick found")
 
-        pT, pI = BP.getTruePick(idx=0, picker="BK", compact_format=True)
-        if pT or pI:
+        pd = BP.extract_true_pick(
+                              idx=0, picker="BK", compact_format=True)
+        if pd:
             errors.append("Something returned even though no TRUE pick found")
 
-        pD = BP.getTruePick(idx=0, picker="BK", compact_format=False)
-        if pD:
+        pd = BP.extract_true_pick(idx=0, picker="BK", compact_format=False)
+        if pd:
             errors.append("Something returned even though no TRUE pick found")
         #
         assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_1():
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx="ALL",
+                                    picker=["AIC", "BK"],
+                                    compact_format=True)
+
+    if len(picklist) != 2:
+        errors.append("Wrong AIC list length returned")
+
+    if not picklist[0][0] < picklist[1][0]:
+        errors.append("Pick list AIC not sorted in UTCtime!")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+        errors.append("P1 AIC not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("P2 AIC not correct")
+
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_2():
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx="ALL",
+                                    picker=["BK", "AIC", "BK"],
+                                    compact_format=True)
+
+    if len(picklist) != 2:
+        errors.append("Wrong BK list length returned")
+
+    if not picklist[0][0] < picklist[1][0]:
+        errors.append("Pick list BK not sorted in UTCtime!")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 740000):
+        errors.append("P2 BK not correct")
+
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_3():
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx=0,
+                                    picker="BK",
+                                    compact_format=True)
+
+    if len(picklist) != 1:
+        errors.append("Wrong BK list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+
+    # ---
+    picklist = BP.extract_true_pick(idx=0,
+                                    picker="AIC",
+                                    compact_format=True)
+
+    if len(picklist) != 1:
+        errors.append("Wrong AIC list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+        errors.append("P1 AIC not correct")
+
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_4():
+    """ Testing the mixed query with list for the extraction """
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx=[0, 1],
+                                    picker=["BK", "AIC"],
+                                    compact_format=True)
+
+    if len(picklist) != 2:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("P2 AIC not correct")
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_5():
+    """ Testing the mixed query with list for the extraction """
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx=[0, 1, 3],
+                                    picker=["BK", "AIC", "BK"],
+                                    compact_format=True)
+
+    if len(picklist) != 2:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("P2 AIC not correct")
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_6():
+    """ Testing the mixed query with list for the extraction """
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+    #
+    BP.CatchEmAll()
+    #
+    # BP.plotPicks(show=True)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx=[0, 3],
+                                    picker=["BK", "AIC"],
+                                    compact_format=True)
+
+    if len(picklist) != 1:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_7():
+    """ Testing the returning of empty list """
+    errors = []
+    #
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx=[0, 3],
+                                    picker=["BK", "AIC"],
+                                    compact_format=True)
+
+    if not isinstance(picklist, list):
+        errors.append("The returned object is not a list")
+
+    if picklist:
+        errors.append("The empty list is not seen as None (empty)")
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))

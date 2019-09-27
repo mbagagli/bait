@@ -36,6 +36,11 @@ class MissingAttribute(Error):
     pass
 
 
+class SizeMismatch(Error):
+    """ Raised when incongruences between vectors happen """
+    pass
+
+
 class Miscellanea(Error):
     """ Raised when the developer is too lazy to think at smth else """
     pass
