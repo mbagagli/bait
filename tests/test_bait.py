@@ -229,8 +229,8 @@ def test_returnedpick_all_new_1():
     if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
         errors.append("P1 AIC not correct")
 
-    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
-        errors.append("P2 AIC not correct")
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 740000):
+        errors.append("P2 BK not correct")
 
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
@@ -416,3 +416,245 @@ def test_returnedpick_all_new_7():
         errors.append("The empty list is not seen as None (empty)")
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_returnedpick_all_new_8():
+    """Testing the picker list increase with 'all' option selected
+       Forcing bait to pick at least 3 VALID picks.
+    """
+    errors = []
+    #
+
+    BAIT_PAR_DICT = {
+        'max_iter': 10,
+        'opbk_main': {
+              'tdownmax': 0.1,     # float: seconds depends on filtering
+              'tupevent': 0.5,     # float: seconds depends on filtering
+              'thr1': 6.0,         # float: sample for CF's value threshold
+              'thr2': 10.0,        # float: sample for sigma updating threshold
+              'preset_len': 0.6,   # float: seconds
+              'p_dur': 1.0         # float: seconds
+        },
+        'opbk_aux': {
+              'tdownmax': 0.1,
+              'tupevent': 0.2,    # time [s] for CF to remain above threshold γ
+              'thr1': 1,           # 10 orig
+              'thr2': 4,           # 20 orig
+              'preset_len': 0.05,   # sec
+              'p_dur': 1.0         # sec
+        },
+        'test_pickvalidation': {
+              'SignalAmp': [0.5, 0.05],
+              # 'SignalSustain': [0.2, 5, 1.2],
+              # 'LowFreqTrend': [0.2, 0.80]
+        },
+        'pickAIC': True,
+        'pickAIC_conf': {
+              'useraw': True,
+              'wintrim_noise': 0.8,
+              'wintrim_sign': 0.5
+        }
+    }
+
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
+
+    BP.CatchEmAll()
+    # BP.plotPicks(show=False)
+    # ========================================== Tests
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker="AIC",
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+        errors.append("P1 AIC not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P2 AIC not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("P3 AIC not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 400000):
+        errors.append("P4 AIC not correct")
+    #
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker="BK",
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 950000):
+        errors.append("P2 BK not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 770000):
+        errors.append("P3 BK not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+        errors.append("P4 BK not correct")
+    #
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker=["AIC", "AIC"],
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+        errors.append("Mixed P1 AIC not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("Mixed P2 AIC not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 770000):
+        errors.append("Mixed P3 BK not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+        errors.append("Mixed P4 BK not correct")
+    #
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker=["BK", "BK"],
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("Mixed P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 950000):
+        errors.append("Mixed P2 BK not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 770000):
+        errors.append("Mixed P3 BK not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+        errors.append("Mixed P4 BK not correct")
+    #
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker=["BK", "AIC", "AIC", "bk"],
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("Mixed P1 BK not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+        errors.append("Mixed P2 AIC not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("Mixed P3 AIC not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+        errors.append("Mixed P4 BK not correct")
+    #
+
+    picklist = BP.extract_true_pick(idx='ALL',
+                                    picker=["AIC", "BK", "AIC", "bk"],
+                                    compact_format=True)
+
+    if len(picklist) != 4:
+        errors.append("Wrong QUERY list length returned")
+
+    if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+        errors.append("Mixed P1 AIC not correct")
+
+    if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 950000):
+        errors.append("Mixed P2 BK not correct")
+
+    if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+        errors.append("Mixed P3 AIC not correct")
+
+    if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+        errors.append("Mixed P4 BK not correct")
+    #
+
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+
+
+
+
+
+
+# ================= Picks (PRIOR *_new_8)
+# =================
+
+# # AIC
+# if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+#     errors.append("P1 AIC not correct")
+
+# if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+#     errors.append("P2 AIC not correct")
+
+# # BK
+# if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+#     errors.append("P1 BK not correct")
+
+# if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 740000):
+#     errors.append("P2 BK not correct")
+
+
+
+
+
+
+
+# ================= Picks (AFTER *_new_8)
+# =================
+
+# # AIC
+# if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 750000):
+#     errors.append("P1 AIC not correct")
+
+# if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+#     errors.append("P2 AIC not correct")
+
+# if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 710000):
+#     errors.append("P3 AIC not correct")
+
+# if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 400000):
+#     errors.append("P4 AIC not correct")
+
+# [(UTCDateTime(2009, 8, 24, 0, 20, 7, 750000), 'IPD0'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 7, 720000), 'EPD3'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 8, 710000), 'EPU4'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 9, 400000), 'EPU4')]
+
+
+
+# # BK
+# if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):
+#     errors.append("P1 BK not correct")
+
+# if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 950000):
+#     errors.append("P2 BK not correct")
+
+# if picklist[2][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 770000):
+#     errors.append("P3 BK not correct")
+
+# if picklist[3][0] != UTCDateTime(2009, 8, 24, 0, 20, 9, 600000):
+#     errors.append("P4 BK not correct")
+
+# [(UTCDateTime(2009, 8, 24, 0, 20, 7, 720000), 'IPD0'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 7, 950000), 'EPD3'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 8, 770000), 'EPU4'),
+#  (UTCDateTime(2009, 8, 24, 0, 20, 9, 600000), 'EPU4')]
+

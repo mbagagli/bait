@@ -452,8 +452,11 @@ class BaIt(object):
                     picker will be returned in a list! (will return None
                     in case no picks will be found)
 
-            NB: If idx=="all"  ==> onle the FIRST string of picker
-                will be used !!!
+            v2.5.1
+            NB: If idx=="all"  and picker is a list/tuple, the list will
+                be used  up to the end. If additional valid picks still
+                exist, the "BK" option will be used...
+                it's afterall an 'iterative BAER' ;)
         """
         out_list = []
         all_true = list(sorted({key: _pd
@@ -479,6 +482,7 @@ class BaIt(object):
             logger.error("Wrong PICKER type")
             raise BE.BadInstance()
         #
+
         if isinstance(idx, (int, tuple, list)):
             if isinstance(idx, int):
                 idx_group = (idx,)
@@ -487,7 +491,16 @@ class BaIt(object):
 
         elif isinstance(idx, str) and idx.lower() in ("all", ":"):
             idx_group = tuple(range(true_count))
-            picker_group = tuple([picker_group[0]] * true_count)
+            # picker_group = tuple([picker_group[0]] * true_count) # OLD
+            if len(idx_group) > len(picker_group) and len(picker_group) > 1:
+                _diff = len(idx_group) - len(picker_group)
+                picker_group = picker_group + tuple(["bk"] * _diff)
+            elif len(idx_group) == len(picker_group):
+                pass
+            else:
+                # MB: user specified only one picker, it will be used
+                #     throughout the pick extraction
+                picker_group = tuple([picker_group[0]] * true_count)
 
         else:
             logger.error("Wrong IDX type")
