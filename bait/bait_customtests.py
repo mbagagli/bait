@@ -10,7 +10,6 @@ DEVELOPER HINT:
 
 """
 
-import os
 import sys
 import numpy as np
 import logging
@@ -44,7 +43,7 @@ def _createCF(inarray):
             impulsive features of the signal, but it's really weak on
             emergent arrivals, especially with The SignalAmp feature.
     """
-    outarray = abs(inarray)         # ORIGINAL
+    outarray = np.abs(inarray)         # ORIGINAL
     # outarray = abs(inarray**2)      # MB 13.02.2019 - test -
     # outarray = np.sqrt(abs(inarray))      # MB 13.02.2019 - test -
     outarray = _normalizeTrace(outarray, rangeVal=[0, 1])
