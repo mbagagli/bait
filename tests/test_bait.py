@@ -588,10 +588,96 @@ def test_returnedpick_all_new_8():
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
 
 
+def test_signalsutain_customtest():
+    """Testing the picker list increase with 'all' option selected
+       Forcing bait to pick at least 3 VALID picks.
+    """
+    errors = []
+    #
+    BAIT_PAR_DICT = {
+        'max_iter': 10,
+        'opbk_main': {
+              'tdownmax': 0.1,     # float: seconds depends on filtering
+              'tupevent': 0.5,     # float: seconds depends on filtering
+              'thr1': 6.0,         # float: sample for CF's value threshold
+              'thr2': 10.0,        # float: sample for sigma updating threshold
+              'preset_len': 0.6,   # float: seconds
+              'p_dur': 1.0         # float: seconds
+        },
+        'opbk_aux': {
+              'tdownmax': 0.1,
+              'tupevent': 0.2,    # time [s] for CF to remain above threshold γ
+              'thr1': 1,           # 10 orig
+              'thr2': 4,           # 20 orig
+              'preset_len': 0.05,   # sec
+              'p_dur': 1.0         # sec
+        },
+        'test_pickvalidation': {
+              # 'SignalAmp': [0.5, 0.05],
+              'SignalSustain': [0.2, 5, 1.2, 'MEAN'],
+              # 'LowFreqTrend': [0.2, 0.80]
+        },
+        'pickAIC': True,
+        'pickAIC_conf': {
+              'useraw': True,
+              'wintrim_noise': 0.8,
+              'wintrim_sign': 0.5
+        }
+    }
 
+    compare_mean_list_one = [14.212710256719546, 30.056322165377797,
+                             25.506449689781277, 18.10447088170802,
+                             10.5551024053402]
+    compare_mean_list_four = [1.2973488006154745, 1.0131700919738775,
+                              1.1227542329360998, 0.4774252395681936,
+                              0.6372265971911042]
+    #
+    compare_max_list_one = [32.21091230926377, 69.82341667115651,
+                            53.25440148722459, 41.34908947502605,
+                            42.723350408468775]
+    #
+    compare_max_list_four = [2.411005376514236, 3.008350482705364,
+                             2.693507151577753, 1.3388610274247856,
+                             1.7949457361200214]
 
+    BP = BaIt(stproc,
+              stream_raw=straw,
+              channel="*Z",
+              **BAIT_PAR_DICT)
 
+    BP.CatchEmAll()
+    baitd = BP._getbaitdict()
 
+    if not baitd['1']['evaluatePick_tests']['SignalSustain'][0]:
+        errors.append("Signal Sustain [1] returned FALSE instead of TRUE")
+    #
+    if baitd['1']['evaluatePick_tests']['SignalSustain'][1] != compare_mean_list_one:
+        errors.append("Signal Sustain [1] returned DIFFERENT RESULTS")
+    #
+    if baitd['4']['evaluatePick_tests']['SignalSustain'][0]:
+        errors.append("Signal Sustain [4] returned TRUE instead of FALSE")
+    #
+    if baitd['4']['evaluatePick_tests']['SignalSustain'][1] != compare_mean_list_four:
+        errors.append("Signal Sustain [4] returned DIFFERENT RESULTS")
+
+    BP._setpicktestdict({'SignalSustain': [0.2, 5, 1.2, 'MAX']})
+    BP.CatchEmAll()
+    baitd = BP._getbaitdict()
+
+    if not baitd['1']['evaluatePick_tests']['SignalSustain'][0]:
+        errors.append("Signal Sustain [1] returned FALSE instead of TRUE")
+    #
+    if baitd['1']['evaluatePick_tests']['SignalSustain'][1] != compare_max_list_one:
+        errors.append("Signal Sustain [1] returned DIFFERENT RESULTS")
+    #
+    if not baitd['4']['evaluatePick_tests']['SignalSustain'][0]:
+        errors.append("Signal Sustain [4] returned FALSE instead of TRUE")
+    #
+    if baitd['4']['evaluatePick_tests']['SignalSustain'][1] != compare_max_list_four:
+        errors.append("Signal Sustain [4] returned DIFFERENT RESULTS")
+
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
 
 
 # ================= Picks (PRIOR *_new_8)
@@ -610,11 +696,6 @@ def test_returnedpick_all_new_8():
 
 # if picklist[1][0] != UTCDateTime(2009, 8, 24, 0, 20, 8, 740000):
 #     errors.append("P2 BK not correct")
-
-
-
-
-
 
 
 # ================= Picks (AFTER *_new_8)
@@ -657,4 +738,3 @@ def test_returnedpick_all_new_8():
 #  (UTCDateTime(2009, 8, 24, 0, 20, 7, 950000), 'EPD3'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 8, 770000), 'EPU4'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 9, 600000), 'EPU4')]
-

@@ -13,6 +13,7 @@ DEVELOPER HINT:
 import sys
 import numpy as np
 import logging
+from bait import bait_errors as BE
 
 
 logger = logging.getLogger(__name__)
@@ -82,21 +83,33 @@ def SignalAmp(wt, bpd, timewin, thr_par_1):
         return (True, Signal.data.max())
 
 
-def SignalSustain(wt, bpd, timewin, timenum, snratio):
+def SignalSustain(wt, bpd, timewin, timenum, snratio, mode="mean",
+                  failwindow_tolerance=0):
     """
     This test evaluate the mean value of signal windows in comparison
     with the noise window before the pick. The ratio should be
     higher than a threshold given by user.
 
         INPUT:
-            - workTrace (obspy.Trace obj)
-            - iteration number [to reach the proper pick]
-            - config py file (BaIt_Config)
-            - File ID (already opened) for logs
+            - wt: workTrace (obspy.Trace obj)
+            - bpd: BaIt object
+            - timewin: amount of time for each windows (also the one for noise)
+            - timenum: number of windows AFTER the pick
+            - snratio: signal/noise ratio threshold. To pass must be HIGHER
+            - mode ["mean"]: compare the CF SIGNAL MEAN against CF NOISE MEAN
+                   ["max"]: compare the CF SIGNAL MAX against CF NOISE MEAN
+            - failwindow_tolerance: number of windows that could be
+                                    BELOW threshold ratio.
+                                    NB: the FIRST on must be ALWAYS up
+                                    (because is what BK see in triggering)
+
         OUTPUT
-            - bool (True/False)
+            - tuple: Result (bool), Values (snr each windows)
 
     """
+    if failwindow_tolerance > timenum:
+        failwindow_tolerance = timenum
+
     tfn = sys._getframe().f_code.co_name
     PrePick_GMT = bpd['pickUTC']-timewin
     wt.data = _createCF(wt.data)
@@ -110,23 +123,38 @@ def SignalSustain(wt, bpd, timewin, timenum, snratio):
                           bpd['pickUTC'] + ((num+1)*timewin))
         WINDOWING.append(Signal.data)
 
-    # ------ Out + Log
-    if True in (window.mean() <= snratio * Noise.data.mean()
-                for window in WINDOWING):
-        # signal2noise ratio is lower then user-threshold
-        logger.debug((' '*4+'FALSE  %s: [SNratio] %5.3f >' +
-                      ' [SigMean(w)/NoiseMean(w)] %s') %
-                     (tfn, snratio, [float(_xx.mean() / Noise.data.mean())
-                      for _xx in WINDOWING]))
-        return (False, [float(_xx.mean() / Noise.data.mean())
-                for _xx in WINDOWING])
+    if mode.lower() == "mean":
+        RATIOS = [float(_xx.mean() / Noise.data.mean())
+                  for _xx in WINDOWING]
+    elif mode.lower() == "max":
+        RATIOS = [float(_xx.max() / Noise.data.mean())
+                  for _xx in WINDOWING]
     else:
+        raise BE.InvalidParameter("MODE parameter must be either MAX or MEAN!")
+
+    _boolarr = np.array([True if _xx <= snratio else False for _xx in RATIOS])
+    if np.sum(_boolarr) <= failwindow_tolerance:
+        # True if below the threshold -> 1st WINDOW must be ALWAYS pass
+        if _boolarr[0]:
+            PASS = False
+        else:
+            PASS = True
+    else:
+        PASS = False
+
+    # --- Log
+    if PASS:
         logger.debug((' '*4+'TRUE   %s: [SNratio] %5.3f <' +
-                      ' [SigMean(w)/NoiseMean(w)] %s') %
-                     (tfn, snratio, [float(_xx.mean() / Noise.data.mean())
-                      for _xx in WINDOWING]))
-        return (True, [float(_xx.mean() / Noise.data.mean())
-                for _xx in WINDOWING])
+                      ' [Ratios] %s [Tolerance: %d]') %
+                     (tfn, snratio, RATIOS, failwindow_tolerance))
+        return (True, RATIOS)
+        # return (True, (RATIOS, np.sum(_boolarr)))
+    else:
+        logger.debug((' '*4+'FALSE   %s: [SNratio] %5.3f <' +
+                      ' [Ratios] %s [Tolerance: %d]') %
+                     (tfn, snratio, RATIOS, failwindow_tolerance))
+        return (False, RATIOS)
+        # return ( False, (RATIOS, np.sum(_boolarr)))
 
 
 def LowFreqTrend(wt, bpd, timewin, conf=0.95):

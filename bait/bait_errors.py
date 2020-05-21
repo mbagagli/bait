@@ -41,6 +41,17 @@ class SizeMismatch(Error):
     pass
 
 
+class InvalidParameter(Error):
+    """ Raised when an invalid parameter is passed to function/method
+    """
+    pass
+
+
+class InvalidAttribute(Error):
+    """ Raised when an invalid attribute is selected from a class """
+    pass
+
+
 class Miscellanea(Error):
     """ Raised when the developer is too lazy to think at smth else """
     pass

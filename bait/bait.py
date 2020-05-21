@@ -140,6 +140,14 @@ class BaIt(object):
         self.wt = selstream.select(channel=channel)[0]
         self.wc = channel
 
+    def _setpicktestdict(self, ndict):
+        """ Adjusting the evaluation pick tests dict """
+        if not isinstance(ndict, dict):
+            raise BE.BadInstance("Argument must be a dict!")
+        #
+        self.pick_test = ndict
+        logger.warning("Make sure to RUN again CatchEmAll method")
+
     def _getbaitdict(self):
         return self.baitdict
 
