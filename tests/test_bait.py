@@ -650,15 +650,15 @@ def test_signalsutain_customtest():
 
     if not baitd['1']['evaluatePick_tests']['SignalSustain'][0]:
         errors.append("Signal Sustain [1] returned FALSE instead of TRUE")
-    #
-    if baitd['1']['evaluatePick_tests']['SignalSustain'][1] != compare_mean_list_one:
-        errors.append("Signal Sustain [1] returned DIFFERENT RESULTS")
+    np.testing.assert_almost_equal(
+        baitd['1']['evaluatePick_tests']['SignalSustain'][1],
+        compare_mean_list_one, decimal=12)
     #
     if baitd['4']['evaluatePick_tests']['SignalSustain'][0]:
         errors.append("Signal Sustain [4] returned TRUE instead of FALSE")
-    #
-    if baitd['4']['evaluatePick_tests']['SignalSustain'][1] != compare_mean_list_four:
-        errors.append("Signal Sustain [4] returned DIFFERENT RESULTS")
+    np.testing.assert_almost_equal(
+        baitd['4']['evaluatePick_tests']['SignalSustain'][1],
+        compare_mean_list_four, decimal=12)
 
     BP._setpicktestdict({'SignalSustain': [0.2, 5, 1.2, 'MAX']})
     BP.CatchEmAll()
@@ -666,16 +666,15 @@ def test_signalsutain_customtest():
 
     if not baitd['1']['evaluatePick_tests']['SignalSustain'][0]:
         errors.append("Signal Sustain [1] returned FALSE instead of TRUE")
-    #
-    if baitd['1']['evaluatePick_tests']['SignalSustain'][1] != compare_max_list_one:
-        errors.append("Signal Sustain [1] returned DIFFERENT RESULTS")
+    np.testing.assert_almost_equal(
+        baitd['1']['evaluatePick_tests']['SignalSustain'][1],
+        compare_max_list_one, decimal=12)
     #
     if not baitd['4']['evaluatePick_tests']['SignalSustain'][0]:
         errors.append("Signal Sustain [4] returned FALSE instead of TRUE")
-    #
-    if baitd['4']['evaluatePick_tests']['SignalSustain'][1] != compare_max_list_four:
-        errors.append("Signal Sustain [4] returned DIFFERENT RESULTS")
-
+    np.testing.assert_almost_equal(
+                        baitd['4']['evaluatePick_tests']['SignalSustain'][1],
+                        compare_max_list_four, decimal=12)
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
 

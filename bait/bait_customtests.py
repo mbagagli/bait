@@ -123,12 +123,23 @@ def SignalSustain(wt, bpd, timewin, timenum, snratio, mode="mean",
                           bpd['pickUTC'] + ((num+1)*timewin))
         WINDOWING.append(Signal.data)
 
+    # Next steps cannot be included in list-comprehension because of
+    # Exception handling
+    RATIOS = []
     if mode.lower() == "mean":
-        RATIOS = [float(_xx.mean() / Noise.data.mean())
-                  for _xx in WINDOWING]
+        for _xx in WINDOWING:
+            try:
+                RATIOS.append(float(_xx.mean() / Noise.data.mean()))
+            except ValueError:
+                RATIOS.append(np.nan)
+
     elif mode.lower() == "max":
-        RATIOS = [float(_xx.max() / Noise.data.mean())
-                  for _xx in WINDOWING]
+        # Because numpy.arrayy max e min raise exception if array empty!
+        for _xx in WINDOWING:
+            try:
+                RATIOS.append(float(_xx.max() / Noise.data.mean()))
+            except ValueError:
+                RATIOS.append(np.nan)
     else:
         raise BE.InvalidParameter("MODE parameter must be either MAX or MEAN!")
 
