@@ -103,7 +103,8 @@ def test_returnedpick_all():
               channel="*Z",
               **BAIT_PAR_DICT)
     #
-    # BP.plotPicks(show=True)
+    BP.CatchEmAll()
+
     # ========================================== Tests
 
     picklist = BP.extract_true_pick(
