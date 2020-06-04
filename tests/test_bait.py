@@ -103,8 +103,6 @@ def test_returnedpick_all():
               channel="*Z",
               **BAIT_PAR_DICT)
     #
-    BP.CatchEmAll()
-    #
     # BP.plotPicks(show=True)
     # ========================================== Tests
 
@@ -717,8 +715,6 @@ def test_signalsutain_customtest():
 #  (UTCDateTime(2009, 8, 24, 0, 20, 7, 720000), 'EPD3'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 8, 710000), 'EPU4'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 9, 400000), 'EPU4')]
-
-
 
 # # BK
 # if picklist[0][0] != UTCDateTime(2009, 8, 24, 0, 20, 7, 720000):

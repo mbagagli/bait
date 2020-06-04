@@ -7,6 +7,7 @@ performing better than the previous sequential one.
 # lib for MAIN
 import logging
 import numpy as np
+from matplotlib.pyplot import show
 # lib for BAIT
 from bait import bait_errors as BE
 from bait import bait_plot as BP
@@ -572,6 +573,64 @@ class BaIt(object):
             self._setworktrace(self.wc, "PROC")
         #
         fig, ax = BP.plotBait(self.wt, cf, self.baitdict, **kwargs)
+        return fig, ax
+
+    def plotTests(self, idx, name="SignalAmp", plotraw=False, **kwargs):
+        """
+        Wrapper method that calls plotting routine for each tests
+        the user specified.
+
+        Returns:
+         - fig handle
+         - ax tuples (more than one possible)
+        """
+        # Create CF always on PROC trace
+        self._setworktrace(self.wc, "PROC")
+        cf = self.wt.copy()
+        cf.data = BCT._createCF(cf.data)
+
+        # select time series
+        if plotraw:
+            self._setworktrace(self.wc, "RAW")
+        else:
+            self._setworktrace(self.wc, "PROC")
+        #
+        if name.lower() in ("signalamp", "sa", "amp"):
+            fig, ax = BP.plotAmplitudeTest(
+                            self.wt, cf, self.baitdict, idx,
+                            *self.pick_test['SignalAmp'], **kwargs)
+
+        elif name.lower() in ("signalsustain", "ss", "sustain"):
+            fig, ax = BP.plotSustainTest(self.wt, cf, self.baitdict, idx,
+                                         *self.pick_test['SignalSustain'],
+                                         **kwargs)
+        elif name.lower() in ("lowfreq", "lf", "low"):
+            fig, ax = BP.plotLowFreqTest(self.wt, cf, self.baitdict, idx,
+                                         *self.pick_test['LowFreqTrend'],
+                                         **kwargs)
+        elif name.lower() in ("all", "ensemble"):
+            kwargs['show'] = False
+            fig1, ax1 = BP.plotAmplitudeTest(
+                            self.wt, cf, self.baitdict, idx,
+                            *self.pick_test['SignalAmp'], **kwargs)
+            fig2, ax2 = BP.plotSustainTest(
+                            self.wt, cf, self.baitdict, idx,
+                            *self.pick_test['SignalSustain'],
+                            **kwargs)
+            fig3, ax3 = BP.plotLowFreqTest(
+                            self.wt, cf, self.baitdict, idx,
+                            *self.pick_test['LowFreqTrend'],
+                            **kwargs)
+            show()
+            return (fig1, fig2, fig3), (ax1, ax2, ax3)
+        else:
+            raise BE.InvalidParameter("%s is missing from evaluation tests. "
+                                      "Try and ADD it yourself :)" % name)
+        # elif name.lower() == "all":
+        #     fig = plt.figure(figsize=(12, 4.5))
+        #     _, ax1 = BP.plotAmplitudeTest(self.wt, cf, self.baitdict, idx, **kwargs)
+        #     _, ax2 = BP.plotSustainTest(self.wt, cf, self.baitdict, idx, **kwargs)
+        #     _, ax3 = BP.plotLowFreqTest(self.wt, cf, self.baitdict, idx, **kwargs)
         return fig, ax
 
     # def evaluatePick_BK_POST(self):
