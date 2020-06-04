@@ -2,7 +2,7 @@
 **It**erative **Ba**er picking system.
 
 *  AUTHOR: _Matteo Bagagli @ ETH-Zurich_
-* VERSION: _2.5.5_
+* VERSION: _2.5.6_
 *    DATE: _06/2020_
 
 ----------

@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="bait",
-    version="2.5.5",
+    version="2.5.6",
     author="Matteo Bagagli",
     author_email="matteo.bagagli@erdw.ethz.com",
     description="an ITerative BAer picker algorithm",

@@ -73,7 +73,7 @@ def SignalAmp(wt, bpd, timewin, thr_par_1):
     Signal = wt.slice(bpd['pickUTC'], bpd['pickUTC'] + timewin)
 
     # ------ Out + Log
-    if Signal.data.max() <= thr_par_1:
+    if Signal.data.max() < thr_par_1:
         logger.debug((' '*4+'FALSE  %s: %5.3f < %5.3f') % (
                                             tfn, Signal.data.max(), thr_par_1))
         return (False, Signal.data.max())
