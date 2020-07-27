@@ -48,11 +48,47 @@ BAIT_PAR_DICT = {
     }
 }
 
+
+BAIT_PAR_DICT_NEW = {
+    'max_iter': 10,
+    'opbk_main': {
+          'tdownmax': 0.5167,     # float: seconds depends on filtering
+          'tupevent': 1.0,     # float: seconds depends on filtering
+          'thr1': 10.0,         # float: sample for CF's value threshold
+          'thr2': 20.0,        # float: sample for sigma updating threshold
+          'preset_len': 0.5,   # float: seconds
+          'p_dur': 1.0         # float: seconds
+    },
+    'opbk_aux': {
+          'tdownmax': 0.5167,
+          'tupevent': 1.0,    # time [s] for CF to remain above threshold γ
+          'thr1': 10,           # 10 orig
+          'thr2': 20,           # 20 orig
+          'preset_len': 0.15,   # sec
+          'p_dur': 1.0         # sec
+    },
+    'test_pickvalidation': {
+          'SignalAmp': [0.5, 0.01],
+          'SignalSustain': [0.3, 5, 1.25, "MAX", 1],
+          'LowFreqTrend': [0.5, 0.80]
+    },
+    'pickAIC': False,
+    'pickAIC_conf': {
+          'useraw': True,
+          'wintrim_noise': 1.1,
+          'wintrim_sign': 1.1
+    }
+}
+
+
 # --------------------
 
 
 straw = read("./tests_data/obspyread.mseed")
 stproc = miniproc(straw)
+
+straw_new = read("./tests_data/KP201710270109OGGMBAIT_PROC*.SAC")
+stproc_new = read("./tests_data/KP201710270109OGGMBAIT_PROC*.SAC")
 
 
 def test_setworktrace():
@@ -674,6 +710,34 @@ def test_signalsutain_customtest():
     np.testing.assert_almost_equal(
                         baitd['4']['evaluatePick_tests']['SignalSustain'][1],
                         compare_max_list_four, decimal=12)
+    #
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_bait_wwrong_iteration_sorting():
+    """ I.e max_it=10, pick dict order sorting is erroneous (1-10-2 ...)
+        Fixed in v2.5.8
+    """
+
+    errors = []
+    #
+    BP = BaIt(stproc_new,
+              stream_raw=straw_new,
+              channel="*Z",
+              **BAIT_PAR_DICT_NEW)
+    #
+    BP.pickAIC = False
+    BP.pickAIC_conf = {}
+    #
+    BP.CatchEmAll()
+
+    # ========================================== Tests
+    tpl = BP.extract_true_pick(idx="all", picker="BK", compact_format=False)
+    #
+    if tpl[0][0] == "10" and tpl[1][0] == "5":
+        errors.append("BAIT returns unsorted dict: i.e. iteration 10 prior 5!")
+    if not tpl[0][0] == "5":
+        errors.append("BAIT returns unsorted dict: first true must be 5th iter!")
     #
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
 

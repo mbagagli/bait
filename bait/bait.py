@@ -470,7 +470,9 @@ class BaIt(object):
         out_list = []
         all_true = list(sorted({key: _pd
                                 for key, _pd in self.baitdict.items()
-                                if _pd['evaluatePick']}.items()))
+                                if _pd['evaluatePick']}.items(),
+                               key=(lambda x: int(x[0])))
+                        )
         true_count = len(all_true)
         #
         if not all_true:
