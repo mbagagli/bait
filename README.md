@@ -2,8 +2,8 @@
 **It**erative **Ba**er picking system.
 
 *  AUTHOR: _Matteo Bagagli @ ETH-Zurich_
-* VERSION: _2.5.8_
-*    DATE: _06/2020_
+* VERSION: _2.5.9_
+*    DATE: _04/2022_
 
 ----------
 
@@ -30,3 +30,4 @@ Prior of the run of the subsequent code, the user must have installed `conda` or
 
 ##### Funny Quotes
 - Always code as if the guy who ends up maintaining your code will be a violent psycopath who knows where you live (Jhon Woods)
+

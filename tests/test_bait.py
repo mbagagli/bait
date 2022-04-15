@@ -798,3 +798,36 @@ def test_bait_wwrong_iteration_sorting():
 #  (UTCDateTime(2009, 8, 24, 0, 20, 7, 950000), 'EPD3'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 8, 770000), 'EPU4'),
 #  (UTCDateTime(2009, 8, 24, 0, 20, 9, 600000), 'EPU4')]
+
+
+
+
+#####################      IF NO PICKE-EVALUATION TEST, BAIT IS NOT
+#####################      PICKING CORRECTLY...--> NO VALID PICKS
+# def test_bait_no_eval():
+#     """ I.e max_it=10, pick dict order sorting is erroneous (1-10-2 ...)
+#         Fixed in v2.5.8
+#     """
+
+#     errors = []
+#     #
+#     BAIT_PAR_DICT_NEW['test_pickvalidation'] = None
+#     BP = BaIt(stproc_new,
+#               stream_raw=straw_new,
+#               channel="*Z",
+#               **BAIT_PAR_DICT_NEW)
+#     #
+#     BP.pickAIC = False
+#     BP.pickAIC_conf = {}
+#     #
+#     BP.CatchEmAll()
+
+#     # ========================================== Tests
+#     tpl = BP.extract_true_pick(idx="all", picker="BK", compact_format=False)
+#     #
+#     if tpl[0][0] == "10" and tpl[1][0] == "5":
+#         errors.append("BAIT returns unsorted dict: i.e. iteration 10 prior 5!")
+#     if not tpl[0][0] == "5":
+#         errors.append("BAIT returns unsorted dict: first true must be 5th iter!")
+#     #
+#     assert not errors, "Errors occured:\n{}".format("\n".join(errors))

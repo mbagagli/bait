@@ -83,6 +83,71 @@ def SignalAmp(wt, bpd, timewin, thr_par_1):
         return (True, Signal.data.max())
 
 
+def Signal2NoiseRatio_MAX(wt, bpd, timewinSIG, timewinNOI, thr_par_1):
+    """
+    This test evaluate the signal2noise ratio among custom signal and
+    noise tim-window length (seconds). It evaluates the MAX values ratios
+    If RATIO >= THRESHOLD returns True, False otherwise.
+
+        INPUT:
+            - workTrace (obspy.Trace obj)
+            - bpd = baitpickdict with the actual pick info to analyze
+
+        OUTPUT
+            - bool (True/False)
+
+    """
+    tfn = sys._getframe().f_code.co_name
+    wt.data = _createCF(wt.data)
+    Signal = wt.slice(bpd['pickUTC'], bpd['pickUTC'] + timewinSIG)
+    Noise = wt.slice(bpd['pickUTC'] - timewinNOI, bpd['pickUTC'])
+
+    # ------ Out + Log
+    s2nr = Signal.data.max() / Noise.data.max()
+    if s2nr < thr_par_1:
+        logger.debug((' '*4+'FALSE  %s: %5.3f < %5.3f') % (
+                                    tfn, s2nr, thr_par_1))
+        return (False, Signal.data.max(), Noise.data.max(), s2nr)
+    else:
+        logger.debug((' '*4+'TRUE   %s: %5.3f >= %5.3f') % (
+                                    tfn, s2nr, thr_par_1))
+        return (True, Signal.data.max(), Noise.data.max(), s2nr)
+
+
+def Signal2NoiseRatio_STD(wt, bpd, timewinSIG, timewinNOI, thr_par_1):
+    """
+    This test evaluate the signal2noise ratio among custom signal and
+    noise time-window length (seconds). It evaluates the STD values ratios
+    If RATIO >= THRESHOLD returns True, False otherwise.
+
+        INPUT:
+            - workTrace (obspy.Trace obj)
+            - bpd = baitpickdict with the actual pick info to analyze
+
+        OUTPUT
+            - bool (True/False)
+
+    """
+    tfn = sys._getframe().f_code.co_name
+    wt.data = _createCF(wt.data)
+    Signal = wt.slice(bpd['pickUTC'], bpd['pickUTC'] + timewinSIG)
+    Noise = wt.slice(bpd['pickUTC'] - timewinNOI, bpd['pickUTC'])
+
+    # ------ Out + Log
+    sig_std = np.std(Signal.data)
+    noi_std = np.std(Noise.data)
+    s2nr = sig_std / noi_std
+    #
+    if s2nr < thr_par_1:
+        logger.debug((' '*4+'FALSE  %s: %5.3f < %5.3f') % (
+                                        tfn, Signal.data.max(), thr_par_1))
+        return (False, sig_std, noi_std, s2nr)
+    else:
+        logger.debug((' '*4+'TRUE   %s: %5.3f > %5.3f') % (
+                                        tfn, Signal.data.max(), thr_par_1))
+        return (True, sig_std, noi_std, s2nr)
+
+
 def SignalSustain(wt, bpd, timewin, timenum, snratio, mode="mean",
                   failwindow_tolerance=0):
     """
