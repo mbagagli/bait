@@ -1,15 +1,16 @@
-# **Ba.** _It_
+# BAIT_
+
 **It**erative **Ba**er picking system.
 
-*  AUTHOR: _Matteo Bagagli @ ETH-Zurich_
-* VERSION: _2.5.9_
-*    DATE: _04/2022_
+AUTHOR: _Matteo Bagagli @ ETH-Zurich_
+VERSION: _2.5.9_
+DATE: _04/2022_
 
 ----------
 
 The BaIt picking system is a software created around the already famous and widely used Baer-Kradolfer picker (Baer 1987). The proposed seismic picker push forward the already great performance of the Baer-Kradolfer algorithm by adding an iterative picking procedure over the given seismic trace.
 
-It rely on standard libraries like numpy, matplotlib and ObsPy. For the installation, see further.
+It relies on standard libraries like numpy, matplotlib and ObsPy. For the installation, see further.
 
 ## Installation
 The file `./data/bait_condaenv.ylm` contains all the encessary dependencies to install and run the framework. The lines to be typed in the terminal are

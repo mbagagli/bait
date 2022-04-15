@@ -1,4 +1,4 @@
-import setuptools
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 with open("requirements.txt") as f:
     required_list = f.read().splitlines()
 
-setuptools.setup(
+setup(
     name="bait",
     version="2.5.9",
     author="Matteo Bagagli",
@@ -16,8 +16,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/mbagagli/bait",
     python_requires='>=3.6',
+    setup_requires=['wheel'],
     install_requires=required_list,
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
