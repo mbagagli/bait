@@ -1,28 +1,41 @@
 # BAIT_
 
-**It**erative **Ba**er picking system.
+**It**erative **Ba**er picking algorithm.
 
-AUTHOR: _Matteo Bagagli @ ETH-Zurich_
+AUTHOR: _Matteo Bagagli_
 VERSION: _2.5.9_
 DATE: _04/2022_
 
 ----------
 
 The BaIt picking system is a software created around the already famous and widely used Baer-Kradolfer picker (Baer 1987). The proposed seismic picker push forward the already great performance of the Baer-Kradolfer algorithm by adding an iterative picking procedure over the given seismic trace.
-
-It relies on standard libraries like numpy, matplotlib and ObsPy. For the installation, see further.
+It relies on standard libraries like `matplotlib` and `obspy`.
 
 ## Installation
-The file `./data/bait_condaenv.ylm` contains all the encessary dependencies to install and run the framework. The lines to be typed in the terminal are
+
+From version `2.5.9` the `bait` picker is also stored on PyPI.
+Prior of the run of the subsequent code, the user must have installed `conda` or `miniconda`.
 
 ```bash
-$ conda create -n bait python=3.6
+$ conda create -n bait python=3.6  # also valid on higher versions.
 $ conda activate bait
-$ pip install .
-$ pytest # to check everything is cool :)
+$ pip install bait # PyPI
 ```
 
-Prior of the run of the subsequent code, the user must have installed `conda` or `miniconda` ([HOW-TO](https://conda.io/docs/user-guide/install/index.html)).
+## Contributing
+
+The `master` branch will remain the official branch for stable releases (and following updates on PyPI).
+If you would like to contribute, please fork the project and checkout to the `DEVELOP` branch.
+From that branch (that is the latest up-to date versions) please create a new branch to work on.
+
+The branch name should be representative of what are you actually trying to achieve/improve.
+The way they should be named are:
+
+- `develop_FEATURENAME`: improve the current state of the software.
+- `bugfix_FEATURENAME`: to correct / fix previous broken/faulty code features or library dependencies
+- `document_FEATURENAME`: to be used when updating the docs or the function's docstring.
+
+Please check-out the `CODE_OF_CONDUCT.md` file.
 
 ----------
 #### References
