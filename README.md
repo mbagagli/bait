@@ -1,7 +1,7 @@
 # BAIT
 
 [![PyPI version](https://badge.fury.io/py/bait.svg)](https://badge.fury.io/py/bait)
-
+[![DOI](https://zenodo.org/badge/482004947.svg)](https://zenodo.org/badge/latestdoi/482004947)
 
 **It**erative **Ba**er picking algorithm.
 
