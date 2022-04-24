@@ -1,9 +1,14 @@
-# BAIT_
+# BAIT
+
+[![PyPI version](https://badge.fury.io/py/bait.svg)](https://badge.fury.io/py/bait)
+
 
 **It**erative **Ba**er picking algorithm.
 
 AUTHOR: _Matteo Bagagli_
+
 VERSION: _2.5.9_
+
 DATE: _04/2022_
 
 ----------
